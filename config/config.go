@@ -5,15 +5,15 @@ import "github.com/jinzhu/configor"
 var Config = struct {
 	Server struct {
 		Domain       string `default:"localhost"`
-		Port         string `default:"0418"`
-		DocumentRoot string `default:"/var/www/http/boohttp"`
+		Port         string `default:"8080"`
+		DocumentRoot string `default:"/home/young/software/boo/boo-blogger"`
 	}
 	DB struct {
 		Driver   string `default:"mysql"`
-		Host     string `default:"localhost"`
+		Host     string `default:"127.0.0.1"`
 		Port     string `default:"3306"`
-		UserName string `required:"true"`
-		Password string
+		UserName string `default:"root"`
+		Password string `default:"young159357789"`
 		Database string `default:"boo"`
 	}
 }{}

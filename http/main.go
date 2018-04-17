@@ -1,9 +1,12 @@
 package main
 
 import (
-	. "/boo-blog/config"
-	"/boo-blog/http/route"
+	. "boo-blog/config"
+	"boo-blog/http/route"
+	. "boo-blog/log"
+	"boo-blog/model"
 	"github.com/dmulholland/args"
+	"log"
 	"net/http"
 )
 
@@ -13,24 +16,26 @@ import (
 // boohttp
 //
 const (
-	APP_NAME = "boohttp"
-	VERSION  = "0.0.1"
+	APP_NAME       = "boohttp"
+	VERSION        = "0.0.1"
+	DEFAULT_CONFIG = "./http.conf"
 )
 
 func main() {
 	parser := args.NewParser()
 	parser.Helptext = help(APP_NAME, VERSION)
 	parser.Version = VERSION
-	parser.NewString("--config", DEFAULT_CONFIG)
+	parser.NewString("-c", DEFAULT_CONFIG)
 	parser.Parse()
+	Logger().Print("hello world")
+	InitConfig(parser.GetString("-c"))
+	model.InitDriver()
 
-	InitConfig(parser.GetString("--config"))
-
-	startHttpServer()
-}
-
-func startHttpServer() {
-	router := route.Route()
+	router := route.Router()
+	// serverAddr := Config.Server.Domain + ":" + Config.Server.Port
+	serverAddr := ":" + Config.Server.Port
+	Logger().Print("listen on " + serverAddr)
+	log.Fatal(http.ListenAndServe(serverAddr, router))
 }
 
 func help(appName string, version string) string {
