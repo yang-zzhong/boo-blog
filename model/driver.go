@@ -3,6 +3,7 @@ package model
 import (
 	. "boo-blog/config"
 	"database/sql"
+	. "database/sql/driver"
 	_ "github.com/go-sql-driver/mysql"
 	. "github.com/yang-zzhong/go-model"
 	. "github.com/yang-zzhong/go-querybuilder"
@@ -52,7 +53,7 @@ func CreateModel(model interface{}) interface{} {
 	mValue := reflect.ValueOf(model).Elem()
 	IdValue := mValue.FieldByName("Id")
 	IdValue.SetString(model.(Model).NewId().(string))
-	now := reflect.ValueOf(time.Now())
+	now := reflect.ValueOf(NullTime{time.Now(), false})
 	CreatedAt := mValue.FieldByName("CreatedAt")
 	CreatedAt.Set(now)
 	UpdatedAt := mValue.FieldByName("UpdatedAt")
@@ -68,4 +69,23 @@ func CreateRepo(model interface{}) (repo *Repo, err error) {
 	}
 	repo = NewRepo(model, driver, &MysqlModifier{})
 	return
+}
+
+type NullTime struct {
+	Time  time.Time
+	Valid bool // Valid is true if Time is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (nt *NullTime) Scan(value interface{}) error {
+	nt.Time, nt.Valid = value.(time.Time)
+	return nil
+}
+
+// Value implements the driver Valuer interface.
+func (nt NullTime) Value() (Value, error) {
+	if !nt.Valid {
+		return nil, nil
+	}
+	return nt.Time, nil
 }
