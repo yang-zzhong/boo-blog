@@ -3,7 +3,6 @@ package main
 import (
 	. "boo-blog/config"
 	"boo-blog/http/route"
-	. "boo-blog/log"
 	"boo-blog/model"
 	"github.com/dmulholland/args"
 	"log"
@@ -27,14 +26,13 @@ func main() {
 	parser.Version = VERSION
 	parser.NewString("-c", DEFAULT_CONFIG)
 	parser.Parse()
-	Logger().Print("hello world")
 	InitConfig(parser.GetString("-c"))
 	model.InitDriver()
 
 	router := route.Router()
 	// serverAddr := Config.Server.Domain + ":" + Config.Server.Port
 	serverAddr := ":" + Config.Server.Port
-	Logger().Print("listen on " + serverAddr)
+	log.Print("listen on " + serverAddr)
 	log.Fatal(http.ListenAndServe(serverAddr, router))
 }
 

@@ -26,6 +26,11 @@ func registerRoute(router *httprouter.Router) {
 		user.RenderUsers(w, req)
 	})
 
+	router.Post("/images", func(w ResponseWriter, req *Request, _ *P) {
+		image := &controller.Image{}
+		image.Create(w, req)
+	})
+
 	router.Post("/users", func(w ResponseWriter, req *Request, _ *P) {
 		user := &controller.User{}
 		user.CreateUser(w, req)

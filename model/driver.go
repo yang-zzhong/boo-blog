@@ -11,6 +11,10 @@ import (
 	"time"
 )
 
+type IdMaker interface {
+	NewId() interface{}
+}
+
 type config struct {
 	driver   string
 	host     string
@@ -51,13 +55,8 @@ func dsn() string {
 
 func CreateModel(model interface{}) interface{} {
 	mValue := reflect.ValueOf(model).Elem()
-	IdValue := mValue.FieldByName("Id")
-	IdValue.SetString(model.(Model).NewId().(string))
-	now := reflect.ValueOf(NullTime{time.Now(), false})
-	CreatedAt := mValue.FieldByName("CreatedAt")
-	CreatedAt.Set(now)
-	UpdatedAt := mValue.FieldByName("UpdatedAt")
-	UpdatedAt.Set(now)
+	IdValue := mValue.FieldByName(model.(Model).PK())
+	IdValue.SetString(model.(IdMaker).NewId().(string))
 
 	return model
 }
@@ -68,6 +67,16 @@ func CreateRepo(model interface{}) (repo *Repo, err error) {
 		return
 	}
 	repo = NewRepo(model, driver, &MysqlModifier{})
+	repo.OnUpdate(func(model interface{}) {
+		mValue := reflect.ValueOf(model).Elem()
+		mValue.FieldByName("UpdatedAt").Set(reflect.ValueOf(time.Now()))
+	})
+	repo.OnCreate(func(model interface{}) {
+		mValue := reflect.ValueOf(model).Elem()
+		now := reflect.ValueOf(time.Now())
+		mValue.FieldByName("CreatedAt").Set(now)
+		mValue.FieldByName("UpdatedAt").Set(now)
+	})
 	return
 }
 

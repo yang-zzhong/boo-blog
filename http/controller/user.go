@@ -1,10 +1,12 @@
 package controller
 
 import (
-	. "boo-blog/log"
 	"boo-blog/model"
+	"database/sql"
 	"fmt"
+	"log"
 	. "net/http"
+	"reflect"
 )
 
 type User struct {
@@ -20,35 +22,36 @@ type User struct {
  */
 func (user *User) CreateUser(w ResponseWriter, req *Request) {
 	mUser := model.NewUser()
-	mUser.EmailAddr = req.FormValue("email_addr")
-	mUser.PhoneNumber = req.FormValue("phone_number")
+	mUser.EmailAddr = sql.NullString{req.FormValue("email_addr"), true}
+	mUser.PhoneNumber = sql.NullString{req.FormValue("phone_number"), true}
 	mUser.Name = req.FormValue("name")
-	mUser.NickName = mUser.Name
+	mUser.NickName = sql.NullString{mUser.Name, true}
 	repo, err := model.NewUserRepo()
 	if err != nil {
 		fmt.Println(err)
-		Logger().Print(err)
+		log.Print(err)
 	}
 	if err = repo.Create(mUser); err != nil {
 		fmt.Println(err)
-		Logger().Print(err)
+		log.Print(err)
 	}
 }
 
 func (user *User) RenderUsers(w ResponseWriter, req *Request) {
+	fmt.Println(reflect.TypeOf(w).Name)
 	repo, err := model.NewUserRepo()
-	Logger().Print("开始执行了")
+	log.Print("开始执行了")
 	if err != nil {
-		Logger().Print(err)
+		log.Print(err)
 		return
 	}
 	result, err := repo.Fetch()
 	if err != nil {
-		Logger().Print(err)
+		log.Print(err)
 		return
 	}
-	Logger().Print("找到结果了")
+	log.Print("找到结果了")
 	for _, item := range result {
-		Logger().Print(item.(model.User))
+		log.Print(item.(model.User))
 	}
 }
