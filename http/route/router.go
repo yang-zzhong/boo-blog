@@ -20,19 +20,24 @@ func registerRoute(router *httprouter.Router) {
 	router.Get("/hello-world", func(w ResponseWriter, req *Request, _ *P) {
 		io.WriteString(w, "hello world")
 	})
-
 	router.Get("/users", func(w ResponseWriter, req *Request, _ *P) {
 		user := &controller.User{}
 		user.RenderUsers(w, req)
 	})
-
+	router.Post("/users", func(w ResponseWriter, req *Request, _ *P) {
+		user := &controller.User{}
+		user.CreateUser(w, req)
+	})
 	router.Post("/images", func(w ResponseWriter, req *Request, _ *P) {
 		image := &controller.Image{}
 		image.Create(w, req)
 	})
-
-	router.Post("/users", func(w ResponseWriter, req *Request, _ *P) {
-		user := &controller.User{}
-		user.CreateUser(w, req)
+	router.Post("/images/:id", func(w ReponseWriter, req *Request, p *P) {
+		image := &controller.Image{}
+		image.Get(w, req, p)
+	})
+	router.Post("/images/:id/move", func(w ReponseWriter, req *Request, p *P) {
+		image := &controller.Image{}
+		image.Move(w, req, p)
 	})
 }

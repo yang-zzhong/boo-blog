@@ -2,10 +2,12 @@ package controller
 
 import (
 	"boo-blog/model"
+	"github.com/nfnt/resize"
 	helpers "github.com/yang-zzhong/go-helpers"
-	_ "image/png"
+	"io"
 	"log"
 	. "net/http"
+	"os"
 )
 
 type Image struct{}
@@ -53,6 +55,35 @@ func (image *Image) Create(w ResponseWriter, req *Request) {
 			return
 		}
 	}
+}
+
+func (image *Image) Get(w ResponseWriter, req *Request, p *helpers.P) {
+	repo, err := model.NewImageRepo()
+	if err != nil {
+		log.Fatal(err)
+		Error(w, err.Error(), 500)
+		return
+	}
+	mImage := repo.Find(p.Get("id"))
+	f, err := os.OpenFile(mImage.Pathfile(), os.O_RDONLY, 0644)
+	defer f.Close()
+	if err != nil {
+		log.Fatal(err)
+		Error(w, err.Error(), 500)
+		return
+	}
+	rImage, err := image.Decode(f)
+	if err != nil {
+		log.Fatal(err)
+		Error(w, err.Error(), 500)
+		return
+	}
+	result, err := resize.Resize(300, 100, rImage, resiz.NearestNeighbor)
+	len, err := io.Copy(w, result)
+	w.Header().Set("Content-Type", mImage.MimeType())
+	w.Header().Set("Content-Length", len)
+	w.WriterHeader(StatusOk)
+	return
 }
 
 func (image *Image) Move(w ResponseWriter, req *Request, p *helpers.P) {

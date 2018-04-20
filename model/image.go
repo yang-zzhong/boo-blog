@@ -3,7 +3,6 @@ package model
 import (
 	"bytes"
 	"crypto/md5"
-	// "github.com/djimenez/iconv-go"
 	"encoding/hex"
 	. "github.com/yang-zzhong/go-model"
 	goImage "image"
@@ -16,6 +15,12 @@ import (
 	"os"
 	"path"
 	"time"
+)
+
+const (
+	IMAGE_PNG  = "png"
+	IMAGE_JPEG = "jpeg"
+	IMAGE_GIF  = "gif"
 )
 
 type Image struct {
@@ -52,17 +57,13 @@ func (image *Image) FillWithMultipart(src mp.File, header *mp.FileHeader) error 
 	switch path.Ext(header.Filename) {
 	case ".png":
 		conf, err = png.DecodeConfig(src)
-		image.Format = ".png"
-	case ".jpg":
-	case ".jpeg":
-		conf, err = jpeg.DecodeConfig(src)
-		image.Format = ".jpeg"
+		image.Format = IMAGE_PNG
 	case ".gif":
 		conf, err = gif.DecodeConfig(src)
-		image.Format = ".gif"
+		image.Format = IMAGE_GIF
 	default:
 		conf, err = jpeg.DecodeConfig(src)
-		image.Format = ".jpeg"
+		image.Format = IMAGE_JPEG
 	}
 	if err != nil {
 		return err
@@ -96,6 +97,19 @@ func (image *Image) RecordExisted() (exists bool, err error) {
 func (image *Image) FileExisted() (exists bool, err error) {
 	exists = false
 	return
+}
+
+func (image *Image) MimeType() string {
+	var contentType string
+	switch image.Format {
+	case model.IMAGE_PNG:
+		contentType = "image/png"
+	case model.IMAGE_GIF:
+		contentType = "image/gif"
+	default:
+		contentType = "image/jpeg"
+	}
+	return contentType
 }
 
 func (image *Image) SaveFile(reader io.Reader) error {
