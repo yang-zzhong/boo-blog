@@ -5,102 +5,76 @@ import (
 	"github.com/nfnt/resize"
 	helpers "github.com/yang-zzhong/go-helpers"
 	"io"
-	"log"
 	. "net/http"
 	"os"
 	"strconv"
 )
 
-type Image struct{}
+type Image struct{ Controller }
 
-func (image *Image) Create(w ResponseWriter, req *Request) {
+func (image *Image) Create(req *Request) {
 	src, header, err := req.FormFile("image")
 	if err != nil {
-		log.Fatal(err)
-		Error(w, err.Error(), 500)
+		image.InternalError(err)
 		return
 	}
 	defer src.Close()
 	mImage := model.NewImage()
 	err = mImage.FillWithMultipart(src, header)
 	if err != nil {
-		log.Fatal(err)
-		Error(w, err.Error(), 500)
+		image.InternalError(err)
 		return
 	}
 	exists, err := mImage.RecordExisted()
 	if err != nil {
-		log.Fatal(err)
-		Error(w, err.Error(), 500)
+		image.InternalError(err)
 		return
 	}
 	repo, err := model.NewImageRepo()
 	if err != nil {
-		Error(w, err.Error(), 500)
+		image.InternalError(err)
 		return
 	}
 	if !exists {
 		if err = repo.Create(mImage); err != nil {
-			log.Fatal(err)
-			Error(w, err.Error(), 500)
+			image.InternalError(err)
 			return
 		}
 	}
-	if exists = mImage.FileExisted(); !exists {
-		dist, err := os.OpenFile(mImage.Pathfile(), os.O_WRONLY|os.O_CREATE, 0666)
-		if err != nil {
-			log.Fatal(err)
-			return
-		}
-		src.Seek(0, 0)
-		defer dist.Close()
-		io.Copy(dist, src)
+	if mImage.FileExisted() {
+		return
 	}
+	dist, err := os.OpenFile(mImage.Pathfile(), os.O_WRONLY|os.O_CREATE, 0666)
+	if err != nil {
+		image.InternalError(err)
+		return
+	}
+	src.Seek(0, 0)
+	defer dist.Close()
+	io.Copy(dist, src)
 }
 
-func (image *Image) Get(w ResponseWriter, req *Request, p *helpers.P) {
+func (image *Image) Get(req *Request, p *helpers.P) {
 	repo, err := model.NewImageRepo()
 	if err != nil {
-		log.Fatal(err)
-		Error(w, err.Error(), 500)
+		image.InternalError(err)
 		return
 	}
 	mImage := repo.Find(p.Get("id")).(model.Image)
 	var width, height int
-	wi := req.FormValue("w")
-	if wi != "" {
-		width, err = strconv.Atoi(wi)
+	w := req.FormValue("w")
+	if w != "" {
+		width, err = strconv.Atoi(w)
 	}
 	h := req.FormValue("h")
 	if h != "" {
 		height, err = strconv.Atoi(h)
 	}
-	if err := mImage.Resize(w, (uint)(width), (uint)(height), resize.NearestNeighbor); err != nil {
-		log.Fatal(err)
-		Error(w, err.Error(), 500)
+	if err := mImage.Resize(image.Writer(), (uint)(width), (uint)(height), resize.NearestNeighbor); err != nil {
+		image.InternalError(err)
 		return
 	}
-	w.Header().Set("Content-Type", mImage.MimeType())
-	w.WriteHeader(StatusOK)
+	image.Writer().Header().Set("Content-Type", mImage.MimeType())
+	image.Writer().WriteHeader(StatusOK)
 	return
-}
-
-func (image *Image) Move(w ResponseWriter, req *Request, p *helpers.P) {
-	repo, err := model.NewImageRepo()
-	if err != nil {
-		log.Fatal(err)
-		Error(w, err.Error(), 500)
-		return
-	}
-	mImage := repo.Find(p.Get("id"))
-	if mImage == nil {
-		Error(w, "资源不存在", 404)
-		return
-	}
-	m := mImage.(model.Image)
-	m.GroupId = req.FormValue("group_id")
-
-	if err = repo.Update(m); err != nil {
-		Error(w, err.Error(), 500)
-	}
 }
