@@ -8,6 +8,7 @@ import (
 	"log"
 	. "net/http"
 	"os"
+	"strconv"
 )
 
 type Image struct{}
@@ -19,6 +20,7 @@ func (image *Image) Create(w ResponseWriter, req *Request) {
 		Error(w, err.Error(), 500)
 		return
 	}
+	defer src.Close()
 	mImage := model.NewImage()
 	err = mImage.FillWithMultipart(src, header)
 	if err != nil {
@@ -44,16 +46,15 @@ func (image *Image) Create(w ResponseWriter, req *Request) {
 			return
 		}
 	}
-	exists, err = mImage.FileExisted()
-	if err != nil {
-		Error(w, err.Error(), 500)
-		return
-	}
-	if !exists {
-		if err = mImage.SaveFile(src); err != nil {
-			Error(w, err.Error(), 500)
+	if exists = mImage.FileExisted(); !exists {
+		dist, err := os.OpenFile(mImage.Pathfile(), os.O_WRONLY|os.O_CREATE, 0666)
+		if err != nil {
+			log.Fatal(err)
 			return
 		}
+		src.Seek(0, 0)
+		defer dist.Close()
+		io.Copy(dist, src)
 	}
 }
 
@@ -64,25 +65,23 @@ func (image *Image) Get(w ResponseWriter, req *Request, p *helpers.P) {
 		Error(w, err.Error(), 500)
 		return
 	}
-	mImage := repo.Find(p.Get("id"))
-	f, err := os.OpenFile(mImage.Pathfile(), os.O_RDONLY, 0644)
-	defer f.Close()
-	if err != nil {
+	mImage := repo.Find(p.Get("id")).(model.Image)
+	var width, height int
+	wi := req.FormValue("w")
+	if wi != "" {
+		width, err = strconv.Atoi(wi)
+	}
+	h := req.FormValue("h")
+	if h != "" {
+		height, err = strconv.Atoi(h)
+	}
+	if err := mImage.Resize(w, (uint)(width), (uint)(height), resize.NearestNeighbor); err != nil {
 		log.Fatal(err)
 		Error(w, err.Error(), 500)
 		return
 	}
-	rImage, err := image.Decode(f)
-	if err != nil {
-		log.Fatal(err)
-		Error(w, err.Error(), 500)
-		return
-	}
-	result, err := resize.Resize(300, 100, rImage, resiz.NearestNeighbor)
-	len, err := io.Copy(w, result)
 	w.Header().Set("Content-Type", mImage.MimeType())
-	w.Header().Set("Content-Length", len)
-	w.WriterHeader(StatusOk)
+	w.WriteHeader(StatusOK)
 	return
 }
 

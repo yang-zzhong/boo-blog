@@ -32,11 +32,11 @@ func registerRoute(router *httprouter.Router) {
 		image := &controller.Image{}
 		image.Create(w, req)
 	})
-	router.Post("/images/:id", func(w ReponseWriter, req *Request, p *P) {
+	router.Get("/images/:id", func(w ResponseWriter, req *Request, p *P) {
 		image := &controller.Image{}
 		image.Get(w, req, p)
 	})
-	router.Post("/images/:id/move", func(w ReponseWriter, req *Request, p *P) {
+	router.Post("/images/:id/move", func(w ResponseWriter, req *Request, p *P) {
 		image := &controller.Image{}
 		image.Move(w, req, p)
 	})

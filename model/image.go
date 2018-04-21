@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/md5"
 	"encoding/hex"
+	"github.com/nfnt/resize"
 	. "github.com/yang-zzhong/go-model"
 	goImage "image"
 	"image/gif"
@@ -94,17 +95,21 @@ func (image *Image) RecordExisted() (exists bool, err error) {
 	return
 }
 
-func (image *Image) FileExisted() (exists bool, err error) {
-	exists = false
-	return
+func (image *Image) FileExisted() (exists bool) {
+	exists = true
+	if _, err := os.Stat(image.Pathfile()); os.IsNotExist(err) {
+		exists = false
+	}
+
+	return exists
 }
 
 func (image *Image) MimeType() string {
 	var contentType string
 	switch image.Format {
-	case model.IMAGE_PNG:
+	case IMAGE_PNG:
 		contentType = "image/png"
-	case model.IMAGE_GIF:
+	case IMAGE_GIF:
 		contentType = "image/gif"
 	default:
 		contentType = "image/jpeg"
@@ -112,15 +117,34 @@ func (image *Image) MimeType() string {
 	return contentType
 }
 
-func (image *Image) SaveFile(reader io.Reader) error {
-	dist, err := os.Create(image.Pathfile())
+func (image *Image) Resize(w io.Writer, width, height uint, interp resize.InterpolationFunction) error {
+	var err error
+	var rImage goImage.Image
+	f, err := os.Open(image.Pathfile())
 	if err != nil {
-		log.Fatal(err)
 		return err
 	}
-	defer dist.Close()
-	io.Copy(dist, reader)
-
+	defer f.Close()
+	switch image.Format {
+	case IMAGE_PNG:
+		rImage, err = png.Decode(f)
+	case IMAGE_GIF:
+		rImage, err = gif.Decode(f)
+	default:
+		rImage, err = jpeg.Decode(f)
+	}
+	if err != nil {
+		return err
+	}
+	result := resize.Resize(width, height, rImage, interp)
+	switch image.Format {
+	case IMAGE_PNG:
+		return png.Encode(w, result)
+	case IMAGE_GIF:
+		return gif.Encode(w, result, nil)
+	default:
+		return jpeg.Encode(w, result, nil)
+	}
 	return nil
 }
 
