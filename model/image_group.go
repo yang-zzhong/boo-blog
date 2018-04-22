@@ -7,14 +7,14 @@ import (
 )
 
 type ImageGroup struct {
-	Id     string `db:id char(36) pk`
-	Name   string `db:name varchar(64)`
-	Intro  string `db:intro varchar(512) nil`
-	UserId string `db:user_id char(36)`
-	TagIds string `db:tag_ids varchar(512) nil`
+	Id     string `db:"id char(36) pk"`
+	Name   string `db:"name varchar(64)"`
+	Intro  string `db:"intro varchar(512) nil"`
+	UserId string `db:"user_id char(36)"`
+	TagIds string `db:"tag_ids varchar(512) nil"`
 
-	CreatedAt time.Time `db:created_at datetime`
-	UpdatedAt time.Time `db:updated_at datetime`
+	CreatedAt time.Time `db:"created_at datetime"`
+	UpdatedAt time.Time `db:"updated_at datetime"`
 }
 
 func (ig *ImageGroup) TableName() string {
@@ -22,10 +22,10 @@ func (ig *ImageGroup) TableName() string {
 }
 
 func (ig *ImageGroup) PK() string {
-	return "id"
+	return "Id"
 }
 
-func (ig *ImageGroup) NewId() string {
+func (ig *ImageGroup) NewId() interface{} {
 	return helpers.RandString(32)
 }
 

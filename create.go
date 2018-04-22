@@ -13,12 +13,13 @@ func main() {
 	parser.NewString("-c", "http/http.conf")
 	config.InitConfig(parser.GetString("-c"))
 	InitDriver()
-	imageRepo, err := NewImageRepo()
+	imageGroupRepo, err := NewImageGroupRepo()
+	// imageRepo, err := NewImageRepo()
 	// userRepo, err := NewUserRepo()
 	if err != nil {
 		panic(err)
 	}
-	repos := []*repo.Repo{imageRepo}
+	repos := []*repo.Repo{imageGroupRepo}
 	for _, repo := range repos {
 		err := repo.CreateTable()
 		if err != nil {

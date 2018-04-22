@@ -71,7 +71,7 @@ func (image *Image) FillWithMultipart(src mp.File, header *mp.FileHeader) error 
 	}
 	image.Width = conf.Width
 	image.Height = conf.Height
-
+	src.Seek(0, 0)
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(src)
 	md5Sumb := md5.Sum(buf.Bytes())

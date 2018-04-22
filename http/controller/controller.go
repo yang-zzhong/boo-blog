@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"encoding/json"
 	"io"
 	"log"
 	"net/http"
@@ -20,7 +21,9 @@ func (controller Controller) String(msg string, statusCode int) {
 }
 
 func (controller Controller) Json(obj interface{}, statusCode int) {
-
+	encoder := json.NewEncoder(controller.Writer())
+	encoder.Encode(obj)
+	controller.Writer().Header().Set("Content-Type", "application/json")
 }
 
 func (controller Controller) InternalError(err error) {

@@ -36,4 +36,8 @@ func registerRoute(router *httprouter.Router) {
 		image := &controller.Image{controller.Controller{w}}
 		image.Get(req, p)
 	})
+	router.Post("/image-groups", func(w ResponseWriter, req *Request, p *P) {
+		imageGroup := &controller.ImageGroup{controller.Controller{w}}
+		imageGroup.Create(req)
+	})
 }

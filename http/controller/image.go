@@ -30,28 +30,31 @@ func (image *Image) Create(req *Request) {
 		image.InternalError(err)
 		return
 	}
-	repo, err := model.NewImageRepo()
-	if err != nil {
-		image.InternalError(err)
-		return
-	}
 	if !exists {
+		repo, err := model.NewImageRepo()
+		if err != nil {
+			image.InternalError(err)
+			return
+		}
 		if err = repo.Create(mImage); err != nil {
 			image.InternalError(err)
 			return
 		}
 	}
-	if mImage.FileExisted() {
-		return
+	if !mImage.FileExisted() {
+		dist, err := os.OpenFile(mImage.Pathfile(), os.O_WRONLY|os.O_CREATE, 0666)
+		if err != nil {
+			image.InternalError(err)
+			return
+		}
+		defer dist.Close()
+		src.Seek(0, 0)
+		io.Copy(dist, src)
 	}
-	dist, err := os.OpenFile(mImage.Pathfile(), os.O_WRONLY|os.O_CREATE, 0666)
-	if err != nil {
-		image.InternalError(err)
-		return
-	}
-	src.Seek(0, 0)
-	defer dist.Close()
-	io.Copy(dist, src)
+	image.Json(map[string]string{
+		"name": mImage.Name,
+		"id":   mImage.Hash,
+	}, 200)
 }
 
 func (image *Image) Get(req *Request, p *helpers.P) {
@@ -60,7 +63,12 @@ func (image *Image) Get(req *Request, p *helpers.P) {
 		image.InternalError(err)
 		return
 	}
-	mImage := repo.Find(p.Get("id")).(model.Image)
+	mi := repo.Find(p.Get("id"))
+	if mi == nil {
+		image.String("图片不存在", 404)
+		return
+	}
+	mImage := mi.(model.Image)
 	var width, height int
 	w := req.FormValue("w")
 	if w != "" {
