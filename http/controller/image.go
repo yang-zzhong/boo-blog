@@ -4,15 +4,15 @@ import (
 	"boo-blog/model"
 	"github.com/nfnt/resize"
 	helpers "github.com/yang-zzhong/go-helpers"
+	httprouter "github.com/yang-zzhong/go-httprouter"
 	"io"
 	. "net/http"
 	"os"
-	"strconv"
 )
 
-type Image struct{ Controller }
+type Image struct{ *Controller }
 
-func (image *Image) Create(req *Request) {
+func (image *Image) Create(req *httprouter.Request) {
 	src, header, err := req.FormFile("image")
 	if err != nil {
 		image.InternalError(err)
@@ -57,7 +57,7 @@ func (image *Image) Create(req *Request) {
 	}, 200)
 }
 
-func (image *Image) Get(req *Request, p *helpers.P) {
+func (image *Image) Get(req *httprouter.Request, p *helpers.P) {
 	repo, err := model.NewImageRepo()
 	if err != nil {
 		image.InternalError(err)
@@ -69,20 +69,17 @@ func (image *Image) Get(req *Request, p *helpers.P) {
 		return
 	}
 	mImage := mi.(model.Image)
-	var width, height int
-	w := req.FormValue("w")
-	if w != "" {
-		width, err = strconv.Atoi(w)
-	}
-	h := req.FormValue("h")
-	if h != "" {
-		height, err = strconv.Atoi(h)
-	}
-	if err := mImage.Resize(image.Writer(), (uint)(width), (uint)(height), resize.NearestNeighbor); err != nil {
+	err = mImage.Resize(
+		image.ResponseWriter(),
+		(uint)(req.FormUint("w")),
+		(uint)(req.FormUint("h")),
+		resize.NearestNeighbor,
+	)
+	if err != nil {
 		image.InternalError(err)
 		return
 	}
-	image.Writer().Header().Set("Content-Type", mImage.MimeType())
-	image.Writer().WriteHeader(StatusOK)
+	image.ResponseWriter().Header().Set("Content-Type", mImage.MimeType())
+	image.ResponseWriter().WriteHeader(StatusOK)
 	return
 }

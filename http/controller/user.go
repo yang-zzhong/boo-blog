@@ -3,10 +3,14 @@ package controller
 import (
 	"boo-blog/model"
 	"database/sql"
-	. "net/http"
+	httprouter "github.com/yang-zzhong/go-httprouter"
 )
 
-type User struct{ Controller }
+type User struct{ *Controller }
+
+func NewUser(responseWriter interface{}) *User {
+	return &User{NewController(responseWriter)}
+}
 
 /**
  * @request
@@ -16,7 +20,7 @@ type User struct{ Controller }
  *   phone_number: (string)
  * }
  */
-func (user *User) CreateUser(req *Request) {
+func (user *User) CreateUser(req *httprouter.Request) {
 	mUser := model.NewUser()
 	mUser.EmailAddr = sql.NullString{req.FormValue("email_addr"), true}
 	mUser.PhoneNumber = sql.NullString{req.FormValue("phone_number"), true}
@@ -33,5 +37,5 @@ func (user *User) CreateUser(req *Request) {
 	}
 }
 
-func (user *User) RenderUsers(req *Request) {
+func (user *User) RenderUsers(req *httprouter.Request) {
 }
