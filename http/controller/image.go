@@ -5,6 +5,7 @@ import (
 	"github.com/nfnt/resize"
 	helpers "github.com/yang-zzhong/go-helpers"
 	httprouter "github.com/yang-zzhong/go-httprouter"
+	. "github.com/yang-zzhong/go-model"
 	"io"
 	. "net/http"
 	"os"
@@ -25,14 +26,14 @@ func (image *Image) Create(req *httprouter.Request) {
 		image.InternalError(err)
 		return
 	}
-	exists, err := mImage.RecordExisted()
-	if err != nil {
+	var exists bool
+	if exists, err := mImage.RecordExisted(); err != nil {
 		image.InternalError(err)
 		return
 	}
 	if !exists {
-		repo, err := model.NewImageRepo()
-		if err != nil {
+		var repo *Repo
+		if repo, err = model.NewImageRepo(); err != nil {
 			image.InternalError(err)
 			return
 		}
