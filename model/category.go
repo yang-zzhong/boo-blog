@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-type ImageGroup struct {
+type Category struct {
 	Id     string   `db:"id char(36) pk"`
 	Name   string   `db:"name varchar(64)"`
 	Intro  string   `db:"intro varchar(512) nil"`
@@ -20,26 +20,26 @@ type ImageGroup struct {
 	UpdatedAt time.Time `db:"updated_at datetime"`
 }
 
-func (ig *ImageGroup) TableName() string {
+func (ig *Category) TableName() string {
 	return "image_group"
 }
 
-func (ig *ImageGroup) PK() string {
+func (ig *Category) PK() string {
 	return "Id"
 }
 
-func (ig *ImageGroup) NewId() interface{} {
+func (ig *Category) NewId() interface{} {
 	return helpers.RandString(32)
 }
 
-func (ig *ImageGroup) DBValue(fieldName string, val interface{}) interface{} {
+func (ig *Category) DBValue(fieldName string, val interface{}) interface{} {
 	if fieldName == "tag_ids" {
 		return sql.NullString{strings.Join(val.([]string), ","), true}
 	}
 	return val
 }
 
-func (ig *ImageGroup) Value(fieldName string, val interface{}) (result reflect.Value, catched bool) {
+func (ig *Category) Value(fieldName string, val interface{}) (result reflect.Value, catched bool) {
 	if fieldName == "tag_ids" {
 		catched = true
 		value, _ := val.(sql.NullString).Value()
@@ -54,10 +54,10 @@ func (ig *ImageGroup) Value(fieldName string, val interface{}) (result reflect.V
 	return
 }
 
-func NewImageGroup() *ImageGroup {
-	return CreateModel(new(ImageGroup)).(*ImageGroup)
+func NewCategory() *Category {
+	return CreateModel(new(Category)).(*Category)
 }
 
-func NewImageGroupRepo() (*repo.Repo, error) {
-	return CreateRepo(new(ImageGroup))
+func NewCategoryRepo() (*repo.Repo, error) {
+	return CreateRepo(new(Category))
 }

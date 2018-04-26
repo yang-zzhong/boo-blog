@@ -27,7 +27,7 @@ func (image *Image) Create(req *httprouter.Request) {
 		return
 	}
 	var exists bool
-	if exists, err := mImage.RecordExisted(); err != nil {
+	if exists, err = mImage.RecordExisted(); err != nil {
 		image.InternalError(err)
 		return
 	}
@@ -83,4 +83,48 @@ func (image *Image) Get(req *httprouter.Request, p *helpers.P) {
 	image.ResponseWriter().Header().Set("Content-Type", mImage.MimeType())
 	image.ResponseWriter().WriteHeader(StatusOK)
 	return
+}
+
+func (image *Image) MoveTo(req *httprouter.Request, p *helpers.P) {
+	var imageRepo *Repo
+	var groupRepo *Repo
+	var image_ids []string
+	var err error
+	image_ids := req.FormSlice("image_ids")
+	if len(image_ids) == 0 {
+		return
+	}
+	if groupRepo, err = model.NewGroupRepo; err != nil {
+		image.InternalError(err)
+		return
+	}
+	var m interface{}
+	if m = groupRepo.Find(req.FormValue("group_id")); m == nil {
+		image.InternalError(err)
+		return
+	}
+	if group := m.(*model.Group); group.UserId != p.Get("visitor").(*User).Id {
+		image.String("你没有权限移动图片到其他人的分类", 405)
+		return
+	}
+	if imageRepo, err = model.NewImageRepo(); err != nil {
+		image.InternalError(err)
+		return
+	}
+	images := imageRepo.WhereIn("id", image_ids).Fetch()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer concel()
+	err = imageRepo.Tx(func(tx *sql.Tx) error {
+		for _, item := range images {
+			mImage := item.(*model.Image)
+			if mImage.UserId != p.Get("visitor").(*model.User).Id {
+				return errors.New("你没有权限移动别人的图片")
+			}
+			mImage.GroupId = req.FormValue("group_id")
+			imageRepo.withTx(tx).Update(mImage)
+		}
+	}, ctx, nil)
+	if err != nil {
+		image.InternalError(err)
+	}
 }

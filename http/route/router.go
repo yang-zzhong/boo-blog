@@ -20,6 +20,9 @@ func registerRoute(router *httprouter.Router) {
 	router.Get("/hello-world", func(w ResponseWriter, req *httprouter.Request, _ *P) {
 		io.WriteString(w, "hello world")
 	})
+	ms := httprouter.NewMs()
+	ms.Append(middleware.AuthUser)
+	router.Group("", httprouter.NewMs())
 	router.Get("/users", func(w ResponseWriter, req *httprouter.Request, _ *P) {
 		user := controller.NewUser(w)
 		user.RenderUsers(req)
