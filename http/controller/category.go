@@ -10,7 +10,7 @@ import (
 type Category struct{ *Controller }
 
 func (cate *Category) Create(req *httprouter.Request, p *helpers.P) {
-	mcate := model.NewImageGroup()
+	mcate := model.NewCategory()
 	mcate.Name = req.FormValue("name")
 	mcate.Intro = req.FormValue("intro")
 	mcate.TagIds = req.FormSlice("tag_ids")
@@ -54,7 +54,7 @@ func (controller *Category) Update(req *httprouter.Request, p *helpers.P) {
 func (controller *Category) Delete(req *httprouter.Request, p *helpers.P) {
 	var repo *Repo
 	var err error
-	if repo, err = model.NewCategoryRepo; err != nil {
+	if repo, err = model.NewCategoryRepo(); err != nil {
 		controller.InternalError(err)
 		return
 	}
@@ -63,12 +63,13 @@ func (controller *Category) Delete(req *httprouter.Request, p *helpers.P) {
 		controller.String("分类未找到", 404)
 		return
 	}
-	cate := m.(*model.Catetory)
+	cate := m.(*model.Category)
 	if cate.UserId != p.Get("visitor").(*model.User).Id {
 		controller.String("你没有权限修改别人的分类", 405)
 		return
 	}
-	if err = repo.Remove(cate); err != nil {
+	repo.Where("id", cate.Id)
+	if err = repo.Remove(); err != nil {
 		controller.InternalError(err)
 	}
 }

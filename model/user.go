@@ -1,14 +1,16 @@
 package model
 
 import (
+	"crypto/md5"
 	"database/sql"
+	"encoding/hex"
 	helpers "github.com/yang-zzhong/go-helpers"
 	. "github.com/yang-zzhong/go-model"
 	"time"
 )
 
 type User struct {
-	Id          string         `db:"id varchar(128) pk"`
+	Id          string         `db:"id char(32) pk"`
 	Name        string         `db:"name varchar(128) uk"`
 	NickName    sql.NullString `db:"nickname varchar(128) nil"`
 	EmailAddr   sql.NullString `db:"email_addr varchar(128) nil"`
@@ -32,8 +34,15 @@ func (user *User) NewId() interface{} {
 	return helpers.RandString(32)
 }
 
+func (user *User) Encrypt(str string) string {
+	md5Sumb := md5.Sum(([]byte)(str + user.Salt))
+	return hex.EncodeToString(md5Sumb[:])
+}
+
 func NewUser() *User {
-	return CreateModel(new(User)).(*User)
+	user := CreateModel(new(User)).(*User)
+	user.Salt = helpers.RandString(32)
+	return user
 }
 
 func NewUserRepo() (userRepo *Repo, err error) {

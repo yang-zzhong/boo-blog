@@ -32,6 +32,7 @@ type Image struct {
 	Size    int64  `db:"size int"`
 	Hash    string `db:"hash char(32) pk"`
 	GroupId string `db:"group_id char(32) nil"`
+	UserId  string `db:"user_id char(32)"`
 
 	CreatedAt time.Time `db:"created_at datetime"`
 	UpdatedAt time.Time `db:"updated_at datetime"`

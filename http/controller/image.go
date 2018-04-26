@@ -2,6 +2,9 @@ package controller
 
 import (
 	"boo-blog/model"
+	"context"
+	"database/sql"
+	"errors"
 	"github.com/nfnt/resize"
 	helpers "github.com/yang-zzhong/go-helpers"
 	httprouter "github.com/yang-zzhong/go-httprouter"
@@ -90,11 +93,11 @@ func (image *Image) MoveTo(req *httprouter.Request, p *helpers.P) {
 	var groupRepo *Repo
 	var image_ids []string
 	var err error
-	image_ids := req.FormSlice("image_ids")
+	image_ids = req.FormSlice("image_ids")
 	if len(image_ids) == 0 {
 		return
 	}
-	if groupRepo, err = model.NewGroupRepo; err != nil {
+	if groupRepo, err = model.NewCategoryRepo(); err != nil {
 		image.InternalError(err)
 		return
 	}
@@ -103,7 +106,7 @@ func (image *Image) MoveTo(req *httprouter.Request, p *helpers.P) {
 		image.InternalError(err)
 		return
 	}
-	if group := m.(*model.Group); group.UserId != p.Get("visitor").(*User).Id {
+	if group := m.(*model.Category); group.UserId != p.Get("visitor").(*model.User).Id {
 		image.String("你没有权限移动图片到其他人的分类", 405)
 		return
 	}
@@ -111,9 +114,10 @@ func (image *Image) MoveTo(req *httprouter.Request, p *helpers.P) {
 		image.InternalError(err)
 		return
 	}
-	images := imageRepo.WhereIn("id", image_ids).Fetch()
+	imageRepo.WhereIn("id", image_ids)
+	images, _ := imageRepo.Fetch()
 	ctx, cancel := context.WithCancel(context.Background())
-	defer concel()
+	defer cancel()
 	err = imageRepo.Tx(func(tx *sql.Tx) error {
 		for _, item := range images {
 			mImage := item.(*model.Image)
@@ -121,8 +125,9 @@ func (image *Image) MoveTo(req *httprouter.Request, p *helpers.P) {
 				return errors.New("你没有权限移动别人的图片")
 			}
 			mImage.GroupId = req.FormValue("group_id")
-			imageRepo.withTx(tx).Update(mImage)
+			imageRepo.WithTx(tx).Update(mImage)
 		}
+		return nil
 	}, ctx, nil)
 	if err != nil {
 		image.InternalError(err)

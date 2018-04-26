@@ -13,7 +13,7 @@ func main() {
 	parser.NewString("-c", "http/http.conf")
 	config.InitConfig(parser.GetString("-c"))
 	InitDriver()
-	imageGroupRepo, err := NewImageGroupRepo()
+	imageGroupRepo, err := NewCategoryRepo()
 	// imageRepo, err := NewImageRepo()
 	// userRepo, err := NewUserRepo()
 	if err != nil {
