@@ -12,7 +12,7 @@ func AuthUser(w http.ResponseWriter, req *httprouter.Request, p *helpers.P) bool
 	session, _ := store.Get(req.Request, "auth")
 	var userId interface{}
 	var ok bool
-	if userId, ok = session.Values["user_id"]; !ok {
+	if userId, ok = session.Values["user_id"]; !ok || userId == nil {
 		w.WriteHeader(401)
 		return false
 	}

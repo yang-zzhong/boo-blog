@@ -16,7 +16,7 @@ import (
 
 type Image struct{ *Controller }
 
-func (image *Image) Create(req *httprouter.Request) {
+func (image *Image) Create(req *httprouter.Request, p *helpers.P) {
 	src, header, err := req.FormFile("image")
 	if err != nil {
 		image.InternalError(err)
@@ -24,6 +24,7 @@ func (image *Image) Create(req *httprouter.Request) {
 	}
 	defer src.Close()
 	mImage := model.NewImage()
+	mImage.UserId = p.Get("visitor_id").(string)
 	err = mImage.FillWithMultipart(src, header)
 	if err != nil {
 		image.InternalError(err)

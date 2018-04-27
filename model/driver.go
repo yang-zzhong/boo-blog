@@ -24,6 +24,8 @@ type config struct {
 }
 
 var conf config
+var conn *sql.DB
+var connected bool
 
 func InitDriver() {
 	conf.driver = Config.DB.Driver
@@ -34,9 +36,19 @@ func InitDriver() {
 	conf.database = Config.DB.Database
 }
 
-func driver() (conn *sql.DB, err error) {
-	conn, err = sql.Open(conf.driver, dsn())
-	return
+func init() {
+	connected = false
+}
+
+func driver() *sql.DB {
+	if connected {
+		return conn
+	}
+	var err error
+	if conn, err = sql.Open(conf.driver, dsn()); err != nil {
+		panic(err)
+	}
+	return conn
 }
 
 func dsn() string {
@@ -54,18 +66,17 @@ func dsn() string {
 
 func CreateModel(model interface{}) interface{} {
 	mValue := reflect.ValueOf(model).Elem()
-	IdValue := mValue.FieldByName(model.(Model).PK())
-	IdValue.SetString(model.(IdMaker).NewId().(string))
+	mm := NewModelMapper(model)
+	if item, ok := mm.FnFds[model.(Model).PK()]; ok {
+		IdValue := mValue.FieldByName(item.Name)
+		IdValue.SetString(model.(IdMaker).NewId().(string))
+	}
 
 	return model
 }
 
 func CreateRepo(model interface{}) (repo *Repo, err error) {
-	driver, err := driver()
-	if err != nil {
-		return
-	}
-	repo = NewRepo(model, driver, &MysqlModifier{})
+	repo = NewRepo(model, driver(), &MysqlModifier{})
 	repo.OnUpdate(func(model interface{}) {
 		mValue := reflect.ValueOf(model).Elem()
 		mValue.FieldByName("UpdatedAt").Set(reflect.ValueOf(time.Now()))

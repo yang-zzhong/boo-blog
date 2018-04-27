@@ -5,24 +5,34 @@ import (
 	helpers "github.com/yang-zzhong/go-helpers"
 	httprouter "github.com/yang-zzhong/go-httprouter"
 	. "github.com/yang-zzhong/go-model"
+	. "github.com/yang-zzhong/go-querybuilder"
 )
 
 type Category struct{ *Controller }
 
-func (cate *Category) Create(req *httprouter.Request, p *helpers.P) {
-	mcate := model.NewCategory()
-	mcate.Name = req.FormValue("name")
-	mcate.Intro = req.FormValue("intro")
-	mcate.TagIds = req.FormSlice("tag_ids")
-	mcate.UserId = p.Get("visitor").(*model.User).Id
+func (controller *Category) Get(req *httprouter.Request, p *helpers.P) {
+
+}
+
+func (controller *Category) Create(req *httprouter.Request, p *helpers.P) {
+	cate := model.NewCategory()
+	cate.Name = req.FormValue("name")
+	cate.Intro = req.FormValue("intro")
+	cate.TagIds = req.FormSlice("tag_ids")
+	cate.UserId = p.Get("visitor_id").(string)
 	var repo *Repo
 	var err error
 	if repo, err = model.NewCategoryRepo(); err != nil {
-		cate.InternalError(err)
+		controller.InternalError(err)
 		return
 	}
-	if err = repo.Create(mcate); err != nil {
-		cate.InternalError(err)
+	repo.Where("name", cate.Name).Where("user_id", cate.UserId)
+	if repo.Count() > 0 {
+		controller.String("名字已存在", 402)
+		return
+	}
+	if err = repo.Create(cate); err != nil {
+		controller.InternalError(err)
 	}
 }
 
@@ -33,13 +43,21 @@ func (controller *Category) Update(req *httprouter.Request, p *helpers.P) {
 		controller.InternalError(err)
 		return
 	}
-	m := repo.Find(p.Get("id"))
-	if m == nil {
+	repo.Where("name", req.FormValue("name")).
+		Where("user_id", p.Get("visitor_id")).
+		Where("id", NEQ, p.Get("id"))
+	if repo.Count() > 0 {
+		controller.String("名字已存在", 402)
+	}
+	var cate *model.Category
+	if m := repo.Find(p.Get("id")); m != nil {
+		c := m.(model.Category)
+		cate = &c
+	} else {
 		controller.String("分类未找到", 404)
 		return
 	}
-	cate := m.(*model.Category)
-	if cate.UserId != p.Get("visitor").(*model.User).Id {
+	if cate.UserId != p.Get("visitor_id") {
 		controller.String("你没有权限修改别人的分类", 405)
 		return
 	}
@@ -58,13 +76,15 @@ func (controller *Category) Delete(req *httprouter.Request, p *helpers.P) {
 		controller.InternalError(err)
 		return
 	}
-	m := repo.Find(p.Get("id"))
-	if m == nil {
+	var cate *model.Category
+	if m := repo.Find(p.Get("id")); m == nil {
 		controller.String("分类未找到", 404)
 		return
+	} else {
+		c := m.(model.Category)
+		cate = &c
 	}
-	cate := m.(*model.Category)
-	if cate.UserId != p.Get("visitor").(*model.User).Id {
+	if cate.UserId != p.Get("visitor_id") {
 		controller.String("你没有权限修改别人的分类", 405)
 		return
 	}
