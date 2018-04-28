@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	. "boo-blog/config"
 	"github.com/gorilla/sessions"
 	helpers "github.com/yang-zzhong/go-helpers"
 	httprouter "github.com/yang-zzhong/go-httprouter"
@@ -8,7 +9,7 @@ import (
 )
 
 func AuthUser(w http.ResponseWriter, req *httprouter.Request, p *helpers.P) bool {
-	store := sessions.NewCookieStore([]byte("36c122e0bf536f739e28a006f8b995c1"))
+	store := sessions.NewCookieStore([]byte(Config.Server.SessionSecret))
 	session, _ := store.Get(req.Request, "auth")
 	var userId interface{}
 	var ok bool

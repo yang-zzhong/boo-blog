@@ -41,9 +41,29 @@ func registerRoute(router *httprouter.Router) {
 		tag := &controller.Tag{controller.NewController(w)}
 		tag.Search(req)
 	})
+	router.Get("/blogs/:id", func(w ResponseWriter, req *httprouter.Request, p *P) {
+		blog := &controller.Article{controller.NewController(w)}
+		blog.GetOne(req, p)
+	})
+	router.Get("/blogs", func(w ResponseWriter, req *httprouter.Request, _ *P) {
+		blog := &controller.Article{controller.NewController(w)}
+		blog.Find(req)
+	})
 	ms := httprouter.NewMs()
 	ms.Append(middleware.AuthUser)
 	router.Group("", ms, func(router *httprouter.Router) {
+		router.Post("/blogs", func(w ResponseWriter, req *httprouter.Request, p *P) {
+			blog := &controller.Article{controller.NewController(w)}
+			blog.Create(req, p)
+		})
+		router.Put("/blogs/:id", func(w ResponseWriter, req *httprouter.Request, p *P) {
+			blog := &controller.Article{controller.NewController(w)}
+			blog.Update(req, p)
+		})
+		router.Delete("/blogs/:id", func(w ResponseWriter, req *httprouter.Request, p *P) {
+			blog := &controller.Article{controller.NewController(w)}
+			blog.Remove(req, p)
+		})
 		router.Post("/imgs", func(w ResponseWriter, req *httprouter.Request, p *P) {
 			image := &controller.Image{controller.NewController(w)}
 			image.Create(req, p)

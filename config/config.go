@@ -4,9 +4,10 @@ import "github.com/jinzhu/configor"
 
 var Config = struct {
 	Server struct {
-		Domain       string `default:"localhost"`
-		Port         string `default:"8080"`
-		DocumentRoot string `default:"/home/young/software/boo/boo-blogger"`
+		Domain        string `default:"localhost"`
+		Port          string `default:"8080"`
+		DocumentRoot  string `default:"/home/young/software/boo/boo-blogger"`
+		SessionSecret string `default:"36c122e0bf536f739e28a006f8b995c1"`
 	}
 	DB struct {
 		Driver   string `default:"mysql"`

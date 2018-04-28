@@ -3,20 +3,21 @@ package model
 import (
 	"database/sql"
 	helpers "github.com/yang-zzhong/go-helpers"
+	. "github.com/yang-zzhong/go-model"
 	"reflect"
 	"strings"
 	"time"
 )
 
 type Article struct {
-	Id      string   `db:"id char(32) pk"`
-	Title   string   `db:"title varchar(64)"`
-	UserId  string   `db:"user_id char(32)"`
-	GroupId string   `db:"group_id char(32) nil"`
-	TagIds  []string `db:"tag_ids varchar(256)"`
-
-	PublishedAt time.Time `db:"pushlished_at datetime"`
-	ModifiedAt  time.Time `db:"modified_at datetime"`
+	Id        string    `db:"id char(32) pk"`
+	Title     string    `db:"title varchar(64)"`
+	Content   string    `db:"content text"`
+	UserId    string    `db:"user_id char(32)"`
+	GroupId   string    `db:"group_id char(32) nil"`
+	TagIds    []string  `db:"tag_ids varchar(256)"`
+	CreatedAt time.Time `db:"created_at datetime"`
+	UpdatedAt time.Time `db:"updated_at datetime"`
 }
 
 func (atl *Article) PK() string {
@@ -52,4 +53,12 @@ func (atl *Article) Value(fieldName string, value interface{}) (result interface
 	}
 	catched = false
 	return
+}
+
+func NewArticle() *Article {
+	return CreateModel(new(Article)).(*Article)
+}
+
+func NewArticleRepo() (*Repo, error) {
+	return CreateRepo(new(Article))
 }

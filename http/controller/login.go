@@ -1,6 +1,7 @@
 package controller
 
 import (
+	. "boo-blog/config"
 	"boo-blog/model"
 	"database/sql"
 	"github.com/gorilla/sessions"
@@ -65,7 +66,7 @@ func (this *Login) Login(req *httprouter.Request) {
 		this.String("用户名或密码不正确", 500)
 		return
 	}
-	store := sessions.NewCookieStore([]byte("36c122e0bf536f739e28a006f8b995c1"))
+	store := sessions.NewCookieStore([]byte(Config.Server.SessionSecret))
 
 	session, _ := store.Get(req.Request, "auth")
 	session.Values["user_id"] = u.Id
@@ -73,7 +74,7 @@ func (this *Login) Login(req *httprouter.Request) {
 }
 
 func (this *Login) Logout(req *httprouter.Request) {
-	store := sessions.NewCookieStore([]byte("36c122e0bf536f739e28a006f8b995c1"))
+	store := sessions.NewCookieStore([]byte(Config.Server.SessionSecret))
 	session, _ := store.Get(req.Request, "auth")
 	session.Values["user_id"] = nil
 
