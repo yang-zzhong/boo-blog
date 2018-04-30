@@ -21,13 +21,13 @@ const (
 	DEFAULT_CONFIG = "./http.ini"
 )
 
-type Server struct {
+type server struct {
 	config *ini.File
 }
 
-func NewServer(configFile string) (server *Server, err error) {
-	server := new(Server)
-	if server.config, err = ini.Load(configFile); err != nil {
+func NewServer(configFile string) (s *server, err error) {
+	s = new(server)
+	if s.config, err = ini.Load(configFile); err != nil {
 		return
 	}
 	return
@@ -54,7 +54,10 @@ func main() {
 	parser.Version = VERSION
 	parser.NewString("-c", DEFAULT_CONFIG)
 	parser.Parse()
-	s := NewServer(parser.GetString("-c"))
+	s, err := NewServer(parser.GetString("-c"))
+	if err != nil {
+		panic(err)
+	}
 	model.InitDriver(s.Config().Section("database"))
 	s.StartServer()
 }

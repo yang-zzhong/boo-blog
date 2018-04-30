@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"boo-blog/http/session"
-	"github.com/gorilla/sessions"
 	helpers "github.com/yang-zzhong/go-helpers"
 	httprouter "github.com/yang-zzhong/go-httprouter"
 	"net/http"

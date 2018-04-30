@@ -11,6 +11,14 @@ import (
 type Login struct{ *Controller }
 
 func (this *Login) Register(req *httprouter.Request) {
+	if req.FormValue("name") == "" {
+		this.String("没有制定用户名", 500)
+		return
+	}
+	if len(req.FormValue("password")) < 12 {
+		this.String("密码长度不够", 500)
+		return
+	}
 	var repo *Repo
 	var err error
 	if repo, err = model.NewUserRepo(); err != nil {

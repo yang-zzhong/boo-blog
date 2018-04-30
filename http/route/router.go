@@ -12,7 +12,7 @@ import (
 func Router(docRoot string) *httprouter.Router {
 	router := httprouter.NewRouter()
 	router.DocRoot = docRoot
-	registerRoute(router)
+	router.Group("/api", httprouter.NewMs(), registerRoute)
 	return router
 }
 

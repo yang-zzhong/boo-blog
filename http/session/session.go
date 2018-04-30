@@ -1,6 +1,6 @@
 package session
 
-import "github.com/golrilla/sessions"
+import "github.com/gorilla/sessions"
 
 var Store sessions.Store
 
