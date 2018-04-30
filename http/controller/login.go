@@ -1,10 +1,9 @@
 package controller
 
 import (
-	. "boo-blog/config"
+	"boo-blog/http/session"
 	"boo-blog/model"
 	"database/sql"
-	"github.com/gorilla/sessions"
 	httprouter "github.com/yang-zzhong/go-httprouter"
 	. "github.com/yang-zzhong/go-model"
 )
@@ -66,17 +65,14 @@ func (this *Login) Login(req *httprouter.Request) {
 		this.String("用户名或密码不正确", 500)
 		return
 	}
-	store := sessions.NewCookieStore([]byte(Config.Server.SessionSecret))
-
-	session, _ := store.Get(req.Request, "auth")
-	session.Values["user_id"] = u.Id
-	session.Save(req.Request, this.ResponseWriter())
+	s, _ := session.Store.Get(req.Request, "auth")
+	s.Values["user_id"] = u.Id
+	s.Save(req.Request, this.ResponseWriter())
 }
 
 func (this *Login) Logout(req *httprouter.Request) {
-	store := sessions.NewCookieStore([]byte(Config.Server.SessionSecret))
-	session, _ := store.Get(req.Request, "auth")
-	session.Values["user_id"] = nil
+	s, _ := session.Store.Get(req.Request, "auth")
+	s.Values["user_id"] = nil
 
-	session.Save(req.Request, this.ResponseWriter())
+	s.Save(req.Request, this.ResponseWriter())
 }

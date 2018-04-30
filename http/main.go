@@ -1,10 +1,11 @@
 package main
 
 import (
-	. "boo-blog/config"
 	"boo-blog/http/route"
+	"boo-blog/http/session"
 	"boo-blog/model"
 	"github.com/dmulholland/args"
+	"github.com/go-ini/ini"
 	"log"
 	"net/http"
 )
@@ -17,8 +18,35 @@ import (
 const (
 	APP_NAME       = "boohttp"
 	VERSION        = "0.0.1"
-	DEFAULT_CONFIG = "./http.conf"
+	DEFAULT_CONFIG = "./http.ini"
 )
+
+type Server struct {
+	config *ini.File
+}
+
+func NewServer(configFile string) (server *Server, err error) {
+	server := new(Server)
+	if server.config, err = ini.Load(configFile); err != nil {
+		return
+	}
+	return
+}
+
+func (s *server) Config() *ini.File {
+	return s.config
+}
+
+func (s *server) StartServer() {
+	root := s.Config().Section("server").Key("doc_root").String()
+	sessionSecret := s.Config().Section("server").Key("session_secret").String()
+	session.InitStore(sessionSecret)
+	router := route.Router(root)
+	port := s.Config().Section("server").Key("port").String()
+	serverAddr := ":" + port
+	log.Print("listen on " + serverAddr)
+	log.Fatal(http.ListenAndServe(serverAddr, router))
+}
 
 func main() {
 	parser := args.NewParser()
@@ -26,14 +54,9 @@ func main() {
 	parser.Version = VERSION
 	parser.NewString("-c", DEFAULT_CONFIG)
 	parser.Parse()
-	InitConfig(parser.GetString("-c"))
-	model.InitDriver()
-
-	router := route.Router()
-	// serverAddr := Config.Server.Domain + ":" + Config.Server.Port
-	serverAddr := ":" + Config.Server.Port
-	log.Print("listen on " + serverAddr)
-	log.Fatal(http.ListenAndServe(serverAddr, router))
+	s := NewServer(parser.GetString("-c"))
+	model.InitDriver(s.Config().Section("database"))
+	s.StartServer()
 }
 
 func help(appName string, version string) string {

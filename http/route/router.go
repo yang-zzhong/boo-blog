@@ -1,7 +1,6 @@
 package route
 
 import (
-	. "boo-blog/config"
 	"boo-blog/http/controller"
 	"boo-blog/http/middleware"
 	. "github.com/yang-zzhong/go-helpers"
@@ -10,9 +9,9 @@ import (
 	. "net/http"
 )
 
-func Router() *httprouter.Router {
+func Router(docRoot string) *httprouter.Router {
 	router := httprouter.NewRouter()
-	router.DocRoot = Config.Server.DocumentRoot
+	router.DocRoot = docRoot
 	registerRoute(router)
 	return router
 }

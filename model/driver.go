@@ -1,8 +1,8 @@
 package model
 
 import (
-	. "boo-blog/config"
 	"database/sql"
+	"github.com/go-ini/ini"
 	_ "github.com/go-sql-driver/mysql"
 	. "github.com/yang-zzhong/go-model"
 	. "github.com/yang-zzhong/go-querybuilder"
@@ -27,13 +27,13 @@ var conf config
 var conn *sql.DB
 var connected bool
 
-func InitDriver() {
-	conf.driver = Config.DB.Driver
-	conf.host = Config.DB.Host
-	conf.port = Config.DB.Port
-	conf.username = Config.DB.UserName
-	conf.password = Config.DB.Password
-	conf.database = Config.DB.Database
+func InitDriver(config *ini.Section) {
+	conf.driver = config.Key("driver").String()
+	conf.host = config.Key("host").String()
+	conf.port = config.Key("port").String()
+	conf.username = config.Key("username").String()
+	conf.password = config.Key("password").String()
+	conf.database = config.Key("database").String()
 }
 
 func init() {
@@ -48,6 +48,7 @@ func driver() *sql.DB {
 	if conn, err = sql.Open(conf.driver, dsn()); err != nil {
 		panic(err)
 	}
+	connected = true
 	return conn
 }
 
