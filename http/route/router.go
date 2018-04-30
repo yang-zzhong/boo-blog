@@ -29,6 +29,10 @@ func registerRoute(router *httprouter.Router) {
 		login := &controller.Login{controller.NewController(w)}
 		login.Logout(req)
 	})
+	router.Get("/users/:name", func(w ResponseWriter, req *httprouter.Request, p *P) {
+		user := &controller.User{controller.NewController(w)}
+		user.One(req, p)
+	})
 	router.Get("/hello-world", func(w ResponseWriter, req *httprouter.Request, _ *P) {
 		io.WriteString(w, "hello world")
 	})

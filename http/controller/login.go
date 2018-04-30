@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	httprouter "github.com/yang-zzhong/go-httprouter"
 	. "github.com/yang-zzhong/go-model"
+	"log"
 )
 
 type Login struct{ *Controller }
@@ -63,7 +64,9 @@ func (this *Login) Login(req *httprouter.Request) {
 	repo.Where("name", account).Or().
 		WhereRaw("email_addr is not null").Where("email_addr", account).Or().
 		WhereRaw("phone_number is not null").Where("phone_number", account)
+	log.Print(repo.ForQuery(), repo.Params())
 	if m = repo.One(); m == nil {
+		log.Print("用户名没找到")
 		this.String("用户名或密码不正确", 500)
 		return
 	}

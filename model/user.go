@@ -10,16 +10,19 @@ import (
 )
 
 type User struct {
-	Id          string         `db:"id char(32) pk"`
-	Name        string         `db:"name varchar(128) uk"`
-	NickName    sql.NullString `db:"nickname varchar(128) nil"`
-	EmailAddr   sql.NullString `db:"email_addr varchar(128) nil"`
-	PhoneNumber sql.NullString `db:"phone_number varchar(128) nil"`
-	Password    string         `db:"password varchar(128)"`
-	Salt        string         `db:"salt char(32)"`
-	CreatedAt   time.Time      `db:"created_at datetime"`
-	UpdatedAt   time.Time      `db:"updated_at datetime"`
-	DeletedAt   NullTime       `db:"deleted_at datetime nil"`
+	Id              string         `db:"id char(32) pk"`
+	Name            string         `db:"name varchar(128) uk"`
+	NickName        sql.NullString `db:"nickname varchar(128) nil"`
+	EmailAddr       sql.NullString `db:"email_addr varchar(128) nil"`
+	PhoneNumber     sql.NullString `db:"phone_number varchar(128) nil"`
+	PortraitImageId sql.NullString `db:"portrait_image_id char(32) nil"`
+	SimpleBgImageId sql.NullString `db:"simple_bg_image_id char(32) nil"`
+	BigBgImageId    sql.NullString `db:"big_bg_image_id char(32) nil"`
+	Password        string         `db:"password varchar(128)"`
+	Salt            string         `db:"salt char(8)"`
+	CreatedAt       time.Time      `db:"created_at datetime"`
+	UpdatedAt       time.Time      `db:"updated_at datetime"`
+	DeletedAt       NullTime       `db:"deleted_at datetime nil"`
 }
 
 func (user *User) TableName() string {
@@ -41,7 +44,7 @@ func (user *User) Encrypt(str string) string {
 
 func NewUser() *User {
 	user := CreateModel(new(User)).(*User)
-	user.Salt = helpers.RandString(32)
+	user.Salt = helpers.RandString(8)
 	return user
 }
 
