@@ -16,37 +16,60 @@ import (
 
 type Image struct{ *Controller }
 
-func (image *Image) Create(req *httprouter.Request, p *helpers.P) {
+func (this *Image) Find(req *httprouter.Request) {
+	var imageRepo, userImageRepo *Repo
+	var err error
+	var data []interface{}
+	if userImageRepo, err = model.NewUserImageRepo(); err != nil {
+		this.InternalError(err)
+		return
+	}
+	if userId := req.FormValue("user_id"); userId != "" {
+		userImageRepo.Where("user_id", userId)
+	}
+	if groupId := req.FormValue("group_id"); groupId != "" {
+		userImageRepo.Where("group_id", groupId)
+	}
+	if imageRepo, err = model.NewImageRepo(); err != nil {
+		this.InternalError(err)
+		return
+	}
+	imageRepo.WhereInQuery("hash", userImageRepo.Select("hash"))
+	if page := req.FormInt("page"); page != 0 {
+		pageSize := req.FormInt("page_size")
+		if pageSize == 0 {
+			pageSize = 20
+		}
+		imageRepo.Offset((int)((page - 1) * pageSize)).Limit((int)(pageSize))
+	}
+	if data, err = imageRepo.Fetch(); err != nil {
+		this.InternalError(err)
+		return
+	}
+	var result []map[string]interface{}
+	for _, m := range data {
+		image := m.(model.Image)
+		result = append(result, map[string]interface{}{
+			"id": image.Hash,
+		})
+	}
+	this.Json(result, 200)
+}
+
+func (this *Image) Create(req *httprouter.Request, p *helpers.P) {
 	src, header, err := req.FormFile("image")
 	if err != nil {
 		image.InternalError(err)
 		return
 	}
 	defer src.Close()
-	mImage := model.NewImage()
-	mImage.UserId = p.Get("visitor_id").(string)
-	err = mImage.FillWithMultipart(src, header)
+	image := model.NewImage()
+	err = image.FillWithMultipart(src, header)
 	if err != nil {
 		image.InternalError(err)
 		return
 	}
-	var exists bool
-	if exists, err = mImage.RecordExisted(); err != nil {
-		image.InternalError(err)
-		return
-	}
-	if !exists {
-		var repo *Repo
-		if repo, err = model.NewImageRepo(); err != nil {
-			image.InternalError(err)
-			return
-		}
-		if err = repo.Create(mImage); err != nil {
-			image.InternalError(err)
-			return
-		}
-	}
-	if !mImage.FileExisted() {
+	if !image.FileExisted() {
 		dist, err := os.OpenFile(mImage.Pathfile(), os.O_WRONLY|os.O_CREATE, 0666)
 		if err != nil {
 			image.InternalError(err)
@@ -55,6 +78,33 @@ func (image *Image) Create(req *httprouter.Request, p *helpers.P) {
 		defer dist.Close()
 		src.Seek(0, 0)
 		io.Copy(dist, src)
+	}
+	var exists bool
+	if exists, err = image.RecordExisted(); err != nil {
+		image.InternalError(err)
+		return
+	}
+	if !exists {
+		var imageRepo, userImageRepo *Repo
+		if imageRepo, err = model.NewImageRepo(); err != nil {
+			image.InternalError(err)
+			return
+		}
+		if userImageRepo, err = model.NewUserImageRepo(); err != nil {
+			image.InternalError(err)
+			return
+		}
+		imageRepo.Tx(func(tx *sqlTx) bool {
+			imageRepo.WithTx(tx).Create(image)
+			userImage := model.NewUserImage()
+			userImage.UserId = p.Get("visitor_id").(string)
+			userImage.Hash = image.Hash
+			userImageRepo.WithTx(tx).Create(userImage)
+		})
+		if err = repo.Create(image); err != nil {
+			image.InternalError(err)
+			return
+		}
 	}
 	image.Json(map[string]string{
 		"name": mImage.Name,

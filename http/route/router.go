@@ -36,7 +36,11 @@ func registerRoute(router *httprouter.Router) {
 	router.Get("/hello-world", func(w ResponseWriter, req *httprouter.Request, _ *P) {
 		io.WriteString(w, "hello world")
 	})
-	router.Get("/imgs/:id", func(w ResponseWriter, req *httprouter.Request, p *P) {
+	router.Get("/images", func(w ResponseWriter, req *httprouter.Request, _ *P) {
+		image := &controller.Image{controller.NewController(w)}
+		image.Find(req)
+	})
+	router.Get("/images/:id", func(w ResponseWriter, req *httprouter.Request, p *P) {
 		image := &controller.Image{controller.NewController(w)}
 		image.Get(req, p)
 	})

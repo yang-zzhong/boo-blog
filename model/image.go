@@ -25,18 +25,15 @@ const (
 )
 
 type Image struct {
-	Name    string `db:"name varchar(256)"`
-	Width   int    `db:"width int"`
-	Height  int    `db:"height int"`
-	Format  string `db:"format varchar(64)"`
-	Size    int64  `db:"size int"`
-	Hash    string `db:"hash char(32) pk"`
-	GroupId string `db:"group_id char(32) nil"`
-	UserId  string `db:"user_id char(32)"`
+	Hash   string `db:"hash char(32) pk"`
+	Name   string `db:"name varchar(256)"`
+	Width  int    `db:"width int"`
+	Height int    `db:"height int"`
+	Format string `db:"format varchar(64)"`
+	Size   int64  `db:"size int"`
 
 	CreatedAt time.Time `db:"created_at datetime"`
 	UpdatedAt time.Time `db:"updated_at datetime"`
-	DeletedAt NullTime  `db:"deleted_at datetime nil"`
 }
 
 func (image *Image) TableName() string {
