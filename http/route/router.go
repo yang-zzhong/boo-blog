@@ -56,6 +56,10 @@ func registerRoute(router *httprouter.Router) {
 		blog := &controller.Article{controller.NewController(w)}
 		blog.Find(req)
 	})
+	router.Get("/cates", func(w ResponseWriter, req *httprouter.Request, _ *P) {
+		blog := &controller.Category{controller.NewController(w)}
+		blog.Find(req)
+	})
 	ms := httprouter.NewMs()
 	ms.Append(middleware.AuthUser)
 	router.Group("", ms, func(router *httprouter.Router) {
@@ -86,10 +90,6 @@ func registerRoute(router *httprouter.Router) {
 		router.Put("/cates", func(w ResponseWriter, req *httprouter.Request, p *P) {
 			cate := &controller.Category{controller.NewController(w)}
 			cate.Update(req, p)
-		})
-		router.Get("/cates", func(w ResponseWriter, req *httprouter.Request, p *P) {
-			cate := &controller.Category{controller.NewController(w)}
-			cate.Get(req, p)
 		})
 	})
 }

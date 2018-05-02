@@ -10,12 +10,11 @@ import (
 )
 
 type Category struct {
-	Id     string   `db:"id char(36) pk"`
-	Name   string   `db:"name varchar(64)"`
-	Intro  string   `db:"intro varchar(512) nil"`
-	UserId string   `db:"user_id char(36)"`
-	TagIds []string `db:"tag_ids varchar(512) nil"`
-
+	Id        string    `db:"id char(36) pk"`
+	Name      string    `db:"name varchar(64)"`
+	Intro     string    `db:"intro varchar(512) nil"`
+	UserId    string    `db:"user_id char(36)"`
+	Tags      []string  `db:"tags varchar(512) nil"`
 	CreatedAt time.Time `db:"created_at datetime"`
 	UpdatedAt time.Time `db:"updated_at datetime"`
 }
@@ -33,14 +32,14 @@ func (ig *Category) NewId() interface{} {
 }
 
 func (ig *Category) DBValue(fieldName string, val interface{}) interface{} {
-	if fieldName == "tag_ids" {
+	if fieldName == "tags" {
 		return sql.NullString{strings.Join(val.([]string), ","), true}
 	}
 	return val
 }
 
 func (ig *Category) Value(fieldName string, val interface{}) (result reflect.Value, catched bool) {
-	if fieldName == "tag_ids" {
+	if fieldName == "tags" {
 		catched = true
 		value, _ := val.(sql.NullString).Value()
 		if value != nil {

@@ -10,15 +10,39 @@ import (
 
 type Category struct{ *Controller }
 
-func (controller *Category) Get(req *httprouter.Request, p *helpers.P) {
-
+func (this *Category) Find(req *httprouter.Request) {
+	var repo *Repo
+	var err error
+	var data map[string]interface{}
+	var result []map[string]interface{}
+	if repo, err = model.NewCategoryRepo(); err != nil {
+		this.InternalError(err)
+		return
+	}
+	if userId := req.FormValue("user_id"); userId != "" {
+		repo.Where("user_id", userId)
+	}
+	if data, err = repo.Fetch(); err != nil {
+		this.InternalError(err)
+		return
+	}
+	for _, item := range data {
+		cate := item.(model.Category)
+		result = append(result, map[string]interface{}{
+			"id":    cate.Id,
+			"tags":  cate.Tags,
+			"name":  cate.Name,
+			"intro": cate.Intro,
+		})
+	}
+	this.Json(result, 200)
 }
 
 func (controller *Category) Create(req *httprouter.Request, p *helpers.P) {
 	cate := model.NewCategory()
 	cate.Name = req.FormValue("name")
 	cate.Intro = req.FormValue("intro")
-	cate.TagIds = req.FormSlice("tag_ids")
+	cate.Tags = req.FormSlice("tags")
 	cate.UserId = p.Get("visitor_id").(string)
 	var repo *Repo
 	var err error
@@ -63,7 +87,7 @@ func (controller *Category) Update(req *httprouter.Request, p *helpers.P) {
 	}
 	cate.Name = req.FormValue("name")
 	cate.Intro = req.FormValue("intro")
-	cate.TagIds = req.FormSlice("tag_ids")
+	cate.Tags = req.FormSlice("tags")
 	if err = repo.Update(cate); err != nil {
 		controller.InternalError(err)
 	}
