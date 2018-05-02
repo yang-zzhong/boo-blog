@@ -15,7 +15,7 @@ type Article struct {
 	Content   string    `db:"content text"`
 	UserId    string    `db:"user_id char(32)"`
 	GroupId   string    `db:"group_id char(32) nil"`
-	TagIds    []string  `db:"tag_ids varchar(256)"`
+	Tags      []string  `db:"tags varchar(256) nil"`
 	CreatedAt time.Time `db:"created_at datetime"`
 	UpdatedAt time.Time `db:"updated_at datetime"`
 }

@@ -26,7 +26,7 @@ func (this *Article) Find(req *httprouter.Request) {
 		repo.Where("group_id", groupId)
 	}
 	if tag := req.FormValue("tag"); tag != "" {
-		repo.Where("tag_ids", LIKE, "%"+tag+"%")
+		repo.Where("tags", LIKE, "%"+tag+"%")
 	}
 	if keyword := req.FormValue("keyword"); keyword != "" {
 		repo.Where("title", LIKE, "%"+keyword+"%").Or().Where("content", LIKE, "%"+keyword+"%")
@@ -50,6 +50,7 @@ func (this *Article) Find(req *httprouter.Request) {
 			"group_id":   atl.GroupId,
 			"user_id":    atl.UserId,
 			"content":    atl.Content,
+			"tags":       atl.Tags,
 			"created_at": atl.CreatedAt,
 			"updated_at": atl.UpdatedAt,
 		})
@@ -96,7 +97,7 @@ func (this *Article) Create(req *httprouter.Request, p *helpers.P) {
 	article.Content = req.FormValue("content")
 	article.UserId = p.Get("visitor_id").(string)
 	article.GroupId = req.FormValue("group_id")
-	article.TagIds = req.FormSlice("tag_ids")
+	article.Tags = req.FormSlice("tags")
 	if err = repo.Create(article); err != nil {
 		this.InternalError(err)
 		return
