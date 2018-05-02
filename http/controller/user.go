@@ -17,7 +17,8 @@ func (this *User) One(req *httprouter.Request, p *helpers.P) {
 		this.InternalError(err)
 		return
 	}
-	if m := repo.Find(p.Get("name")); m != nil {
+	repo.Where("name", p.Get("name"))
+	if m := repo.One(); m != nil {
 		user = m.(model.User)
 	} else {
 		this.String("没有找到用户", 404)

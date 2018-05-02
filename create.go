@@ -16,13 +16,24 @@ func main() {
 	} else {
 		panic(err)
 	}
-	// imageGroupRepo, err := NewCategoryRepo()
-	// imageRepo, err := NewImageRepo()
+	cateRepo, err := NewCategoryRepo()
+	if err != nil {
+		panic(err)
+	}
+	imageRepo, err := NewImageRepo()
+	if err != nil {
+		panic(err)
+	}
+	userImageRepo, err := NewUserImageRepo()
+	if err != nil {
+		panic(err)
+	}
 	userRepo, err := NewUserRepo()
 	if err != nil {
 		panic(err)
 	}
-	repos := []*repo.Repo{userRepo}
+	tagRepo, err := NewTagRepo()
+	repos := []*repo.Repo{userRepo, cateRepo, imageRepo, userImageRepo, tagRepo}
 	for _, repo := range repos {
 		err := repo.CreateTable()
 		if err != nil {

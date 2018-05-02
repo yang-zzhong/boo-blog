@@ -25,13 +25,12 @@ const (
 )
 
 type Image struct {
-	Hash   string `db:"hash char(32) pk"`
-	Name   string `db:"name varchar(256)"`
-	Width  int    `db:"width int"`
-	Height int    `db:"height int"`
-	Format string `db:"format varchar(64)"`
-	Size   int64  `db:"size int"`
-
+	Hash      string    `db:"hash char(32) pk"`
+	Name      string    `db:"name varchar(256)"`
+	Width     int       `db:"width int"`
+	Height    int       `db:"height int"`
+	Format    string    `db:"format varchar(64)"`
+	Size      int64     `db:"size int"`
 	CreatedAt time.Time `db:"created_at datetime"`
 	UpdatedAt time.Time `db:"updated_at datetime"`
 }
@@ -45,7 +44,7 @@ func (image *Image) PK() string {
 }
 
 func (image *Image) Pathfile() string {
-	return "./" + image.Name
+	return "/home/young/Pictures/" + image.Name
 }
 
 func (image *Image) FillWithMultipart(src mp.File, header *mp.FileHeader) error {

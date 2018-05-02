@@ -17,9 +17,9 @@ import (
 type Image struct{ *Controller }
 
 func (this *Image) Find(req *httprouter.Request) {
-	var imageRepo, userImageRepo *Repo
+	var userImageRepo *Repo
 	var err error
-	var data []interface{}
+	var userImages map[string]interface{}
 	if userImageRepo, err = model.NewUserImageRepo(); err != nil {
 		this.InternalError(err)
 		return
@@ -30,27 +30,23 @@ func (this *Image) Find(req *httprouter.Request) {
 	if groupId := req.FormValue("group_id"); groupId != "" {
 		userImageRepo.Where("group_id", groupId)
 	}
-	if imageRepo, err = model.NewImageRepo(); err != nil {
-		this.InternalError(err)
-		return
-	}
-	imageRepo.WhereInQuery("hash", userImageRepo.Select("hash"))
 	if page := req.FormInt("page"); page != 0 {
 		pageSize := req.FormInt("page_size")
 		if pageSize == 0 {
 			pageSize = 20
 		}
-		imageRepo.Offset((int)((page - 1) * pageSize)).Limit((int)(pageSize))
+		userImageRepo.Offset((int)((page - 1) * pageSize)).Limit((int)(pageSize))
 	}
-	if data, err = imageRepo.Fetch(); err != nil {
+	if userImages, err = userImageRepo.Fetch(); err != nil {
 		this.InternalError(err)
 		return
 	}
 	var result []map[string]interface{}
-	for _, m := range data {
-		image := m.(model.Image)
+	for _, m := range userImages {
+		image := m.(model.UserImage)
 		result = append(result, map[string]interface{}{
-			"id": image.Hash,
+			"image_id": image.Hash,
+			"user_id":  image.UserId,
 		})
 	}
 	this.Json(result, 200)
@@ -59,20 +55,20 @@ func (this *Image) Find(req *httprouter.Request) {
 func (this *Image) Create(req *httprouter.Request, p *helpers.P) {
 	src, header, err := req.FormFile("image")
 	if err != nil {
-		image.InternalError(err)
+		this.InternalError(err)
 		return
 	}
 	defer src.Close()
 	image := model.NewImage()
 	err = image.FillWithMultipart(src, header)
 	if err != nil {
-		image.InternalError(err)
+		this.InternalError(err)
 		return
 	}
 	if !image.FileExisted() {
-		dist, err := os.OpenFile(mImage.Pathfile(), os.O_WRONLY|os.O_CREATE, 0666)
+		dist, err := os.OpenFile(image.Pathfile(), os.O_WRONLY|os.O_CREATE, 0666)
 		if err != nil {
-			image.InternalError(err)
+			this.InternalError(err)
 			return
 		}
 		defer dist.Close()
@@ -81,34 +77,43 @@ func (this *Image) Create(req *httprouter.Request, p *helpers.P) {
 	}
 	var exists bool
 	if exists, err = image.RecordExisted(); err != nil {
-		image.InternalError(err)
+		this.InternalError(err)
 		return
 	}
 	if !exists {
-		var imageRepo, userImageRepo *Repo
+		var imageRepo *Repo
 		if imageRepo, err = model.NewImageRepo(); err != nil {
-			image.InternalError(err)
+			this.InternalError(err)
 			return
 		}
-		if userImageRepo, err = model.NewUserImageRepo(); err != nil {
-			image.InternalError(err)
-			return
-		}
-		imageRepo.Tx(func(tx *sqlTx) bool {
-			imageRepo.WithTx(tx).Create(image)
-			userImage := model.NewUserImage()
-			userImage.UserId = p.Get("visitor_id").(string)
-			userImage.Hash = image.Hash
-			userImageRepo.WithTx(tx).Create(userImage)
-		})
-		if err = repo.Create(image); err != nil {
-			image.InternalError(err)
+		if err = imageRepo.Create(image); err != nil {
+			this.InternalError(err)
 			return
 		}
 	}
-	image.Json(map[string]string{
-		"name": mImage.Name,
-		"id":   mImage.Hash,
+	var userImageRepo *Repo
+	if userImageRepo, err = model.NewUserImageRepo(); err != nil {
+		this.InternalError(err)
+		return
+	}
+	userImageRepo.Where("user_id", p.Get("visitor_id")).Where("hash", image.Hash)
+	var userImage *model.UserImage
+	if m := userImageRepo.One(); m != nil {
+		ui := m.(model.UserImage)
+		userImage = &ui
+	} else {
+		userImage = model.NewUserImage()
+		userImage.UserId = p.Get("visitor_id").(string)
+		userImage.Hash = image.Hash
+		if err = userImageRepo.Create(userImage); err != nil {
+			this.InternalError(err)
+			return
+		}
+	}
+	this.Json(map[string]string{
+		"user_image_id": userImage.Id,
+		"name":          image.Name,
+		"image_id":      image.Hash,
 	}, 200)
 }
 
@@ -161,7 +166,7 @@ func (image *Image) MoveTo(req *httprouter.Request, p *helpers.P) {
 		image.String("你没有权限移动图片到其他人的分类", 405)
 		return
 	}
-	if imageRepo, err = model.NewImageRepo(); err != nil {
+	if imageRepo, err = model.NewUserImageRepo(); err != nil {
 		image.InternalError(err)
 		return
 	}
@@ -171,12 +176,14 @@ func (image *Image) MoveTo(req *httprouter.Request, p *helpers.P) {
 	defer cancel()
 	err = imageRepo.Tx(func(tx *sql.Tx) error {
 		for _, item := range images {
-			mImage := item.(*model.Image)
-			if mImage.UserId != p.Get("visitor").(*model.User).Id {
+			image := item.(model.UserImage)
+			if image.UserId != p.Get("visitor").(*model.User).Id {
 				return errors.New("你没有权限移动别人的图片")
 			}
-			mImage.GroupId = req.FormValue("group_id")
-			imageRepo.WithTx(tx).Update(mImage)
+			image.GroupId = req.FormValue("group_id")
+			if err = imageRepo.WithTx(tx).Update(image); err != nil {
+				return err
+			}
 		}
 		return nil
 	}, ctx, nil)

@@ -13,7 +13,7 @@ type Article struct{ *Controller }
 func (this *Article) Find(req *httprouter.Request) {
 	var repo *Repo
 	var err error
-	var items []interface{}
+	var items map[string]interface{}
 	var result []map[string]interface{}
 	if repo, err = model.NewArticleRepo(); err != nil {
 		this.InternalError(err)

@@ -79,6 +79,11 @@ func (this *Login) Login(req *httprouter.Request) {
 	s, _ := session.Store.Get(req.Request, "auth")
 	s.Values["user_id"] = u.Id
 	s.Save(req.Request, this.ResponseWriter())
+
+	this.Json(map[string]interface{}{
+		"id":   user.Id,
+		"name": user.Name,
+	}, 200)
 }
 
 func (this *Login) Logout(req *httprouter.Request) {

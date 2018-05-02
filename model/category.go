@@ -21,7 +21,7 @@ type Category struct {
 }
 
 func (ig *Category) TableName() string {
-	return "image_group"
+	return "category"
 }
 
 func (ig *Category) PK() string {

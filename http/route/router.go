@@ -71,7 +71,7 @@ func registerRoute(router *httprouter.Router) {
 			blog := &controller.Article{controller.NewController(w)}
 			blog.Remove(req, p)
 		})
-		router.Post("/imgs", func(w ResponseWriter, req *httprouter.Request, p *P) {
+		router.Post("/images", func(w ResponseWriter, req *httprouter.Request, p *P) {
 			image := &controller.Image{controller.NewController(w)}
 			image.Create(req, p)
 		})
