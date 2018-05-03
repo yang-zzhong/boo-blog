@@ -22,6 +22,7 @@ func (this *Category) Find(req *httprouter.Request) {
 	if userId := req.FormValue("user_id"); userId != "" {
 		repo.Where("user_id", userId)
 	}
+	repo.OrderBy("created_at", DESC)
 	if data, err = repo.Fetch(); err != nil {
 		this.InternalError(err)
 		return
@@ -52,7 +53,7 @@ func (controller *Category) Create(req *httprouter.Request, p *helpers.P) {
 	}
 	repo.Where("name", cate.Name).Where("user_id", cate.UserId)
 	if repo.Count() > 0 {
-		controller.String("名字已存在", 402)
+		controller.String("名字已存在", 500)
 		return
 	}
 	if err = repo.Create(cate); err != nil {

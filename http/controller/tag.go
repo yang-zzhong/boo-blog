@@ -62,7 +62,7 @@ func (this *Tag) Search(req *httprouter.Request) {
 		this.Json([]string{}, 200)
 		return
 	}
-	repo.Where("name", LIKE, keyword+"%").Limit(10)
+	repo.Where("title", LIKE, keyword+"%").Limit(10)
 	var models map[string]interface{}
 	if models, err = repo.Fetch(); err != nil {
 		this.InternalError(err)

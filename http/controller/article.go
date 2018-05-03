@@ -79,7 +79,7 @@ func (this *Article) GetOne(req *httprouter.Request, p *helpers.P) {
 		"content":   article.Content,
 		"userId":    article.UserId,
 		"groupId":   article.GroupId,
-		"Tags":      article.TagIds,
+		"Tags":      article.Tags,
 		"CreatedAt": article.CreatedAt,
 		"UpdatedAt": article.UpdatedAt,
 	}, 200)
@@ -128,7 +128,7 @@ func (this *Article) Update(req *httprouter.Request, p *helpers.P) {
 	article.Title = req.FormValue("title")
 	article.Content = req.FormValue("content")
 	article.GroupId = req.FormValue("group_id")
-	article.TagIds = req.FormSlice("tag_ids")
+	article.Tags = req.FormSlice("tags")
 	if err = repo.Update(&article); err != nil {
 		this.InternalError(err)
 	}

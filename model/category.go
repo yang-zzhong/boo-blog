@@ -24,7 +24,7 @@ func (ig *Category) TableName() string {
 }
 
 func (ig *Category) PK() string {
-	return "Id"
+	return "id"
 }
 
 func (ig *Category) NewId() interface{} {
