@@ -22,8 +22,8 @@ func (this *Article) Find(req *httprouter.Request) {
 	if ownerId := req.FormValue("owner_id"); ownerId != "" {
 		repo.Where("user_id", ownerId)
 	}
-	if groupId := req.FormValue("group_id"); groupId != "" {
-		repo.Where("group_id", groupId)
+	if groupId := req.FormValue("cate_id"); groupId != "" {
+		repo.Where("cate_id", groupId)
 	}
 	if tag := req.FormValue("tag"); tag != "" {
 		repo.Where("tags", LIKE, "%"+tag+"%")
@@ -47,7 +47,7 @@ func (this *Article) Find(req *httprouter.Request) {
 		result = append(result, map[string]interface{}{
 			"id":         atl.Id,
 			"title":      atl.Title,
-			"group_id":   atl.GroupId,
+			"cate_id":    atl.CateId,
 			"user_id":    atl.UserId,
 			"content":    atl.Content,
 			"tags":       atl.Tags,
@@ -78,7 +78,7 @@ func (this *Article) GetOne(req *httprouter.Request, p *helpers.P) {
 		"title":     article.Title,
 		"content":   article.Content,
 		"userId":    article.UserId,
-		"groupId":   article.GroupId,
+		"cateId":    article.CateId,
 		"Tags":      article.Tags,
 		"CreatedAt": article.CreatedAt,
 		"UpdatedAt": article.UpdatedAt,
@@ -96,7 +96,7 @@ func (this *Article) Create(req *httprouter.Request, p *helpers.P) {
 	article.Title = req.FormValue("title")
 	article.Content = req.FormValue("content")
 	article.UserId = p.Get("visitor_id").(string)
-	article.GroupId = req.FormValue("group_id")
+	article.CateId = req.FormValue("cate_id")
 	article.Tags = req.FormSlice("tags")
 	if err = repo.Create(article); err != nil {
 		this.InternalError(err)
@@ -127,7 +127,7 @@ func (this *Article) Update(req *httprouter.Request, p *helpers.P) {
 	}
 	article.Title = req.FormValue("title")
 	article.Content = req.FormValue("content")
-	article.GroupId = req.FormValue("group_id")
+	article.CateId = req.FormValue("cate_id")
 	article.Tags = req.FormSlice("tags")
 	if err = repo.Update(&article); err != nil {
 		this.InternalError(err)
