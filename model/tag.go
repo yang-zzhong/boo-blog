@@ -12,7 +12,7 @@ type Tag struct {
 	UserId    string         `db:"user_id char(32)"`
 	IntroUrl  sql.NullString `db:"intro_url varchar(512) nil"`
 	CreatedAt time.Time      `db:"created_at datetime"`
-	UpdateAt  time.Time      `db:"updated_at datetime"`
+	UpdatedAt time.Time      `db:"updated_at datetime"`
 }
 
 func (tag *Tag) PK() string {
