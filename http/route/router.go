@@ -83,6 +83,10 @@ func registerPublicRoute(router *httprouter.Router) {
 		tag := &controller.Tag{controller.NewController(w)}
 		tag.Search(req)
 	})
+	router.Get("/tags/:user_id", func(w ResponseWriter, req *httprouter.Request, p *P) {
+		tag := &controller.Tag{controller.NewController(w)}
+		tag.Get(req, p)
+	})
 	router.Get("/blogs/:id", func(w ResponseWriter, req *httprouter.Request, p *P) {
 		blog := &controller.Article{controller.NewController(w)}
 		blog.GetOne(req, p)

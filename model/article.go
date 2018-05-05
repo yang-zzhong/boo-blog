@@ -1,10 +1,8 @@
 package model
 
 import (
-	"database/sql"
 	helpers "github.com/yang-zzhong/go-helpers"
 	. "github.com/yang-zzhong/go-model"
-	"log"
 	"reflect"
 	"strings"
 	"time"
@@ -34,7 +32,6 @@ func (atl *Article) NewId() interface{} {
 }
 
 func (atl *Article) DBValue(fieldName string, value interface{}) interface{} {
-	log.Println(fieldName)
 	if fieldName == "tags" {
 		result := strings.Join(value.([]string), ",")
 		return result
@@ -43,12 +40,11 @@ func (atl *Article) DBValue(fieldName string, value interface{}) interface{} {
 }
 
 func (atl *Article) Value(fieldName string, value interface{}) (result reflect.Value, catched bool) {
-	log.Println(fieldName)
 	if fieldName == "tags" {
 		catched = true
-		val, _ := value.(sql.NullString).Value()
-		if val != nil {
-			result = reflect.ValueOf(strings.Split(val.(string), ","))
+		val, _ := value.(string)
+		if val != "" {
+			result = reflect.ValueOf(strings.Split(val, ","))
 			return
 		}
 		result = reflect.ValueOf([]string{})

@@ -16,7 +16,7 @@ type Tag struct {
 }
 
 func (tag *Tag) PK() string {
-	return "name"
+	return "title"
 }
 
 func (tag *Tag) TableName() string {

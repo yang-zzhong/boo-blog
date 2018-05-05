@@ -63,7 +63,23 @@ func (this *Tag) Search(req *httprouter.Request) {
 		return
 	}
 	repo.Where("title", LIKE, keyword+"%").Limit(10)
+	this.renderRepo(repo)
+}
+
+func (this *Tag) Get(req *httprouter.Request, _ *helpers.P) {
+	var repo *Repo
+	var err error
+	if repo, err = model.NewTagRepo(); err != nil {
+		this.InternalError(err)
+		return
+	}
+
+	this.renderRepo(repo)
+}
+
+func (this *Tag) renderRepo(repo *Repo) {
 	var models map[string]interface{}
+	var err error
 	if models, err = repo.Fetch(); err != nil {
 		this.InternalError(err)
 		return

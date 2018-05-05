@@ -6,6 +6,7 @@ import (
 	httprouter "github.com/yang-zzhong/go-httprouter"
 	. "github.com/yang-zzhong/go-model"
 	. "github.com/yang-zzhong/go-querybuilder"
+	"log"
 )
 
 type Article struct{ *Controller }
@@ -22,8 +23,8 @@ func (this *Article) Find(req *httprouter.Request) {
 	if ownerId := req.FormValue("owner_id"); ownerId != "" {
 		repo.Where("user_id", ownerId)
 	}
-	if groupId := req.FormValue("cate_id"); groupId != "" {
-		repo.Where("cate_id", groupId)
+	if cateId := req.FormValue("cate_id"); cateId != "" {
+		repo.Where("cate_id", cateId)
 	}
 	if tag := req.FormValue("tag"); tag != "" {
 		repo.Where("tags", LIKE, "%"+tag+"%")
@@ -97,6 +98,8 @@ func (this *Article) Create(req *httprouter.Request, p *helpers.P) {
 	article.Content = req.FormValue("content")
 	article.UserId = p.Get("visitor_id").(string)
 	article.CateId = req.FormValue("cate_id")
+	log.Println(req.FormSlice("tags"))
+	log.Println(req.FormValue("tags"))
 	article.Tags = req.FormSlice("tags")
 	if err = repo.Create(article); err != nil {
 		this.InternalError(err)
