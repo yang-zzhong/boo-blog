@@ -27,6 +27,10 @@ func (tag *Tag) TableName() string {
 	return "tag"
 }
 
+func (tag *Tag) NewId() interface{} {
+	return ""
+}
+
 func NewTag() *Tag {
 	return CreateModel(new(Tag)).(*Tag)
 }
