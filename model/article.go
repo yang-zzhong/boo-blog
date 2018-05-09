@@ -75,7 +75,7 @@ func (atl *Article) WithOverview(content string) {
 				if d.Type == html.TextNode {
 					overview += d.Data
 				}
-				if len(overview) > 256 {
+				if len(overview) > 512 {
 					return true
 				}
 				return false
@@ -84,9 +84,6 @@ func (atl *Article) WithOverview(content string) {
 		}
 		return false
 	})
-	if len(overview) > 256 {
-		overview = overview[0:255]
-	}
 	log.Print(overview)
 	atl.Overview = overview
 }
