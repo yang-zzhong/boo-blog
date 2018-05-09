@@ -39,6 +39,7 @@ func (this *Article) Find(req *httprouter.Request) {
 		}
 		repo.Offset((int)((page - 1) * pageSize)).Limit((int)(pageSize))
 	}
+	repo.OrderBy("created_at", DESC)
 	if items, err = repo.Fetch(); err != nil {
 		this.InternalError(err)
 		return

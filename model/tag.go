@@ -19,6 +19,10 @@ func (tag *Tag) PK() string {
 	return "title"
 }
 
+func (tag *Tag) NewId() interface{} {
+	return ""
+}
+
 func (tag *Tag) TableName() string {
 	return "tag"
 }
