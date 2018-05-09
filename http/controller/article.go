@@ -51,6 +51,7 @@ func (this *Article) Find(req *httprouter.Request) {
 			"title":      atl.Title,
 			"cate_id":    atl.CateId,
 			"user_id":    atl.UserId,
+			"url_id":     atl.UrlId,
 			"overview":   atl.Overview,
 			"tags":       atl.Tags,
 			"created_at": atl.CreatedAt,
