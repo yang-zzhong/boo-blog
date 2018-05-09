@@ -44,7 +44,7 @@ func (image *Image) PK() string {
 }
 
 func (image *Image) Pathfile() string {
-	return "/home/young/Pictures/" + image.Name
+	return conf.image_dir + image.Name
 }
 
 func (image *Image) FillWithMultipart(src mp.File, header *mp.FileHeader) error {

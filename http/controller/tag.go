@@ -50,6 +50,35 @@ func (this *Tag) Create(req *httprouter.Request, p *helpers.P) {
 	}, 200)
 }
 
+func (this *Tag) ArticleUsed(req *httprouter.Request, p *helpers.P) {
+	var repo *Repo
+	var err error
+	var models map[string]interface{}
+	if repo, err = model.NewArticleRepo(); err != nil {
+		this.InternalError(err)
+		return
+	}
+	repo.Where("user_id", p.Get("user_id"))
+	repo.Select("id", "tags")
+	if models, err = repo.Fetch(); err != nil {
+		this.InternalError(err)
+		return
+	}
+	tags := make(map[string]string)
+	var result []map[string]string
+	for _, m := range models {
+		atl := m.(model.Article)
+		for _, tag := range atl.Tags {
+			tags[tag] = tag
+		}
+	}
+	for _, tag := range tags {
+		result = append(result, map[string]string{"name": tag})
+	}
+
+	this.Json(result, 200)
+}
+
 func (this *Tag) Search(req *httprouter.Request) {
 	var repo *Repo
 	var err error
@@ -73,7 +102,7 @@ func (this *Tag) Get(req *httprouter.Request, _ *helpers.P) {
 		this.InternalError(err)
 		return
 	}
-
+	repo.OrderBy("created_at", DESC)
 	this.renderRepo(repo)
 }
 

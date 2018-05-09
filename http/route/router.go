@@ -71,6 +71,14 @@ func registerPublicRoute(router *httprouter.Router) {
 		user := &controller.User{controller.NewController(w)}
 		user.One(req, p)
 	})
+	router.Get("/users/:user_id/articles/:url_id", func(w ResponseWriter, req *httprouter.Request, p *P) {
+		blog := &controller.Article{controller.NewController(w)}
+		blog.FetchUserBlog(req, p)
+	})
+	router.Get("/users/:user_id/used-tags", func(w ResponseWriter, req *httprouter.Request, p *P) {
+		tag := &controller.Tag{controller.NewController(w)}
+		tag.ArticleUsed(req, p)
+	})
 	router.Get("/images", func(w ResponseWriter, req *httprouter.Request, _ *P) {
 		image := &controller.Image{controller.NewController(w)}
 		image.Find(req)

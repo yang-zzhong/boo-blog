@@ -6,6 +6,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	. "github.com/yang-zzhong/go-model"
 	. "github.com/yang-zzhong/go-querybuilder"
+	"os"
 	"reflect"
 	"time"
 )
@@ -15,12 +16,14 @@ type IdMaker interface {
 }
 
 type config struct {
-	driver   string
-	host     string
-	port     string
-	username string
-	password string
-	database string
+	driver    string
+	host      string
+	port      string
+	username  string
+	password  string
+	database  string
+	image_dir string
+	blog_dir  string
 }
 
 var conf config
@@ -34,6 +37,29 @@ func InitDriver(config *ini.Section) {
 	conf.username = config.Key("username").String()
 	conf.password = config.Key("password").String()
 	conf.database = config.Key("database").String()
+	conf.image_dir = config.Key("image_dir").String()
+	conf.blog_dir = config.Key("blog_dir").String()
+	sureDir(conf.image_dir)
+	sureDir(conf.blog_dir)
+}
+
+func sureDir(dir string) {
+	var fi os.FileInfo
+	var err error
+	if fi, err = os.Stat(dir); err != nil {
+		if os.IsNotExist(err) {
+			err = os.MkdirAll(dir, 0755)
+		}
+		if err != nil {
+			panic(err)
+		}
+	}
+	if !fi.IsDir() {
+		err = os.MkdirAll(dir, 0755)
+	}
+	if err != nil {
+		panic(err)
+	}
 }
 
 func init() {

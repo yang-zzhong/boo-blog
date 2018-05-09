@@ -50,7 +50,7 @@ func (this *Article) Find(req *httprouter.Request) {
 			"title":      atl.Title,
 			"cate_id":    atl.CateId,
 			"user_id":    atl.UserId,
-			"content":    atl.Content,
+			"overview":   atl.Overview,
 			"tags":       atl.Tags,
 			"created_at": atl.CreatedAt,
 			"updated_at": atl.UpdatedAt,
@@ -77,7 +77,37 @@ func (this *Article) GetOne(req *httprouter.Request, p *helpers.P) {
 	this.Json(map[string]interface{}{
 		"id":        article.Id,
 		"title":     article.Title,
-		"content":   article.Content,
+		"content":   (&article).Content(),
+		"userId":    article.UserId,
+		"cateId":    article.CateId,
+		"Tags":      article.Tags,
+		"CreatedAt": article.CreatedAt,
+		"UpdatedAt": article.UpdatedAt,
+	}, 200)
+}
+
+func (this *Article) FetchUserBlog(req *httprouter.Request, p *helpers.P) {
+	var repo *Repo
+	var err error
+	var article model.Article
+	if repo, err = model.NewArticleRepo(); err != nil {
+		this.InternalError(err)
+		return
+	}
+	repo.Where("user_id", p.Get("user_id")).
+		Where("url_id", p.Get("url_id"))
+
+	if m := repo.One(); m != nil {
+		article = m.(model.Article)
+	} else {
+		this.String("文章未找到", 404)
+		return
+	}
+	this.Json(map[string]interface{}{
+		"id":        article.Id,
+		"title":     article.Title,
+		"overview":  article.Overview,
+		"content":   (&article).Content(),
 		"userId":    article.UserId,
 		"cateId":    article.CateId,
 		"Tags":      article.Tags,
@@ -93,14 +123,29 @@ func (this *Article) Create(req *httprouter.Request, p *helpers.P) {
 		this.InternalError(err)
 		return
 	}
+	log.Println(1)
 	article := model.NewArticle()
 	article.Title = req.FormValue("title")
-	article.Content = req.FormValue("content")
 	article.UserId = p.Get("visitor_id").(string)
 	article.CateId = req.FormValue("cate_id")
-	log.Println(req.FormSlice("tags"))
-	log.Println(req.FormValue("tags"))
 	article.Tags = req.FormSlice("tags")
+	article.WithUrlId().WithOverview(req.FormValue("content"))
+	repo.Where("user_id", article.UserId).Quote(func(repo *Builder) {
+		repo.Where("title", article.Title)
+		repo.Or().Where("url_id", article.UrlId)
+	})
+	if repo.Count() > 0 {
+		this.String("该标题已使用", 500)
+		return
+	}
+	if len(article.Tags) == 0 {
+		this.String("至少选择一个标签", 500)
+		return
+	}
+	if err = article.SaveContent(req.FormValue("content")); err != nil {
+		this.InternalError(err)
+		return
+	}
 	if err = repo.Create(article); err != nil {
 		this.InternalError(err)
 		return
@@ -129,9 +174,9 @@ func (this *Article) Update(req *httprouter.Request, p *helpers.P) {
 		return
 	}
 	article.Title = req.FormValue("title")
-	article.Content = req.FormValue("content")
 	article.CateId = req.FormValue("cate_id")
 	article.Tags = req.FormSlice("tags")
+	article.WithUrlId().WithOverview(req.FormValue("content"))
 	if err = repo.Update(&article); err != nil {
 		this.InternalError(err)
 	}
