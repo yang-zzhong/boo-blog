@@ -2,10 +2,12 @@ package controller
 
 import (
 	"boo-blog/model"
+	"database/sql"
 	helpers "github.com/yang-zzhong/go-helpers"
 	httprouter "github.com/yang-zzhong/go-httprouter"
 	. "github.com/yang-zzhong/go-model"
 	. "github.com/yang-zzhong/go-querybuilder"
+	"log"
 )
 
 type Category struct{ *Controller }
@@ -13,8 +15,6 @@ type Category struct{ *Controller }
 func (this *Category) Find(req *httprouter.Request) {
 	var repo *Repo
 	var err error
-	var data map[string]interface{}
-	var result []map[string]interface{}
 	if repo, err = model.NewCategoryRepo(); err != nil {
 		this.InternalError(err)
 		return
@@ -22,21 +22,7 @@ func (this *Category) Find(req *httprouter.Request) {
 	if userId := req.FormValue("user_id"); userId != "" {
 		repo.Where("user_id", userId)
 	}
-	repo.OrderBy("created_at", DESC)
-	if data, err = repo.Fetch(); err != nil {
-		this.InternalError(err)
-		return
-	}
-	for _, item := range data {
-		cate := item.(model.Category)
-		result = append(result, map[string]interface{}{
-			"id":    cate.Id,
-			"tags":  cate.Tags,
-			"name":  cate.Name,
-			"intro": cate.Intro,
-		})
-	}
-	this.Json(result, 200)
+	this.renderCates(repo, make(map[string]int))
 }
 
 func (controller *Category) Create(req *httprouter.Request, p *helpers.P) {
@@ -59,6 +45,78 @@ func (controller *Category) Create(req *httprouter.Request, p *helpers.P) {
 	if err = repo.Create(cate); err != nil {
 		controller.InternalError(err)
 	}
+}
+
+func (this *Category) ImageUsed(req *httprouter.Request, p *helpers.P) {
+	var repo, imageRepo *Repo
+	var err error
+	if imageRepo, err = model.NewImageRepo(); err != nil {
+		this.InternalError(err)
+		return
+	}
+	imageRepo.Where("user_id", p.Get("user_id")).
+		Select("cate_id", E{"count(1) as quantity"}).
+		GroupBy("cate_id")
+	var cateIds []string
+	idQuantity := make(map[string]int)
+	imageRepo.QueryCallback(func(rows *sql.Rows) {
+		var id string
+		var quantity int
+		if err = rows.Scan(&id, &quantity); err != nil {
+			return
+		}
+		cateIds = append(cateIds, id)
+		idQuantity[id] = quantity
+	})
+	if err != nil {
+		this.InternalError(err)
+		return
+	}
+	if repo, err = model.NewCategoryRepo(); err != nil {
+		this.InternalError(err)
+		return
+	}
+	if len(cateIds) == 0 {
+		return
+	}
+	repo.WhereIn("id", cateIds)
+
+	this.renderCates(repo, idQuantity)
+}
+
+func (this *Category) ArticleUsed(req *httprouter.Request, p *helpers.P) {
+	var repo, articleRepo *Repo
+	var err error
+	if articleRepo, err = model.NewArticleRepo(); err != nil {
+		this.InternalError(err)
+		return
+	}
+	articleRepo.Where("user_id", p.Get("user_id")).
+		Select("cate_id", E{"count(1) as quantity"}).
+		GroupBy("cate_id")
+	var cateIds []string
+	idQuantity := make(map[string]int)
+	articleRepo.QueryCallback(func(rows *sql.Rows) {
+		var id string
+		var quantity int
+		if err = rows.Scan(&id, &quantity); err != nil {
+			return
+		}
+		cateIds = append(cateIds, id)
+		idQuantity[id] = quantity
+	})
+	if repo, err = model.NewCategoryRepo(); err != nil {
+		this.InternalError(err)
+		return
+	}
+	if len(cateIds) == 0 {
+		return
+	}
+	log.Print("cateIds", cateIds)
+	repo.WhereIn("id", cateIds)
+	log.Print(repo.ForQuery())
+
+	this.renderCates(repo, idQuantity)
 }
 
 func (controller *Category) Update(req *httprouter.Request, p *helpers.P) {
@@ -117,4 +175,31 @@ func (controller *Category) Delete(req *httprouter.Request, p *helpers.P) {
 	if err = repo.Remove(); err != nil {
 		controller.InternalError(err)
 	}
+}
+
+func (this *Category) renderCates(repo *Repo, idQuantity map[string]int) {
+	var data map[string]interface{}
+	var err error
+	var result []map[string]interface{}
+	repo.OrderBy("created_at", DESC)
+	if data, err = repo.Fetch(); err != nil {
+		this.InternalError(err)
+		return
+	}
+	for _, item := range data {
+		cate := item.(model.Category)
+		var quantity int
+		var ok bool
+		if quantity, ok = idQuantity[cate.Id]; !ok {
+			quantity = 0
+		}
+		result = append(result, map[string]interface{}{
+			"id":       cate.Id,
+			"tags":     cate.Tags,
+			"name":     cate.Name,
+			"intro":    cate.Intro,
+			"quantity": quantity,
+		})
+	}
+	this.Json(result, 200)
 }

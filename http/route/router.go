@@ -75,6 +75,14 @@ func registerPublicRoute(router *httprouter.Router) {
 		blog := &controller.Article{controller.NewController(w)}
 		blog.FetchUserBlog(req, p)
 	})
+	router.Get("/users/:user_id/article-used-cates", func(w ResponseWriter, req *httprouter.Request, p *P) {
+		cate := &controller.Category{controller.NewController(w)}
+		cate.ArticleUsed(req, p)
+	})
+	router.Get("/users/:user_id/image-used-cates", func(w ResponseWriter, req *httprouter.Request, p *P) {
+		cate := &controller.Category{controller.NewController(w)}
+		cate.ImageUsed(req, p)
+	})
 	router.Get("/users/:user_id/used-tags", func(w ResponseWriter, req *httprouter.Request, p *P) {
 		tag := &controller.Tag{controller.NewController(w)}
 		tag.ArticleUsed(req, p)

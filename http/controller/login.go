@@ -3,6 +3,7 @@ package controller
 import (
 	"boo-blog/http/session"
 	"boo-blog/model"
+	"context"
 	"database/sql"
 	httprouter "github.com/yang-zzhong/go-httprouter"
 	. "github.com/yang-zzhong/go-model"
@@ -42,7 +43,7 @@ func (this *Login) Register(req *httprouter.Request) {
 		this.String("电话或者邮箱或者用户名已被使用", 500)
 		return
 	}
-	if err = repo.Create(user); err != nil {
+	if err = this.CreateUser(repo, user); err != nil {
 		this.InternalError(err)
 		return
 	}
@@ -91,4 +92,22 @@ func (this *Login) Logout(req *httprouter.Request) {
 	s.Values["user_id"] = nil
 
 	s.Save(req.Request, this.ResponseWriter())
+}
+
+func (this *Login) CreateUser(repo *Repo, user *model.User) error {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	return repo.Tx(func(tx *sql.Tx) error {
+		theme := model.NewTheme()
+		theme.UserId = user.Id
+		theme.Name = user.Name + "的博客"
+		repo.WithTx(tx).Create(user)
+		var themeRepo *Repo
+		var err error
+		if themeRepo, err = model.NewThemeRepo(); err != nil {
+			return err
+		}
+		themeRepo.WithTx(tx).Create(theme)
+		return nil
+	}, ctx, nil)
 }

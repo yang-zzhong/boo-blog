@@ -32,12 +32,16 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	themeRepo, err := NewThemeRepo()
+	if err != nil {
+		panic(err)
+	}
 	blogRepo, err := NewArticleRepo()
 	if err != nil {
 		panic(err)
 	}
 	tagRepo, err := NewTagRepo()
-	repos := []*repo.Repo{userRepo, cateRepo, imageRepo, userImageRepo, tagRepo, blogRepo}
+	repos := []*repo.Repo{userRepo, cateRepo, imageRepo, userImageRepo, themeRepo, tagRepo, blogRepo}
 	for _, repo := range repos {
 		err := repo.CreateTable()
 		if err != nil {

@@ -25,11 +25,18 @@ func (this *User) One(req *httprouter.Request, p *helpers.P) {
 		return
 	}
 	this.Json(map[string]interface{}{
-		"id":                user.Id,
-		"name":              user.Name,
-		"nickname":          user.NickName,
-		"portrait_image_id": user.PortraitImageId,
-		"small_image_id":    user.SimpleBgImageId,
-		"bg_image_id":       user.BigBgImageId,
+		"id":       user.Id,
+		"name":     user.Name,
+		"nickname": user.NickName,
 	}, 200)
+}
+
+func (this *User) SaveBlogInfo(req *httprouter.Request, p *helpers.P) {
+	var repo *Repo
+	var err error
+	if repo, err = model.NewUserRepo(); err != nil {
+		this.InternalError(err)
+		return
+	}
+	repo.Fetch()
 }
