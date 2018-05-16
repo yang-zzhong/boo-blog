@@ -69,9 +69,25 @@ func (this *User) One(req *httprouter.Request, p *helpers.P) {
 func (this *User) SaveBlogInfo(req *httprouter.Request, p *helpers.P) {
 	var repo *Repo
 	var err error
-	if repo, err = model.NewUserRepo(); err != nil {
+	var theme model.Theme
+	if repo, err = model.NewThemeRepo(); err != nil {
 		this.InternalError(err)
 		return
 	}
-	repo.Fetch()
+	if m := repo.Find(p.Get("user_id")); m != nil {
+		theme = m.(repo.Theme)
+	} else {
+		this.String("没有找到主题", 404)
+		return
+	}
+	theme.BgImageId = req.FormValue("bg_image_id")
+	theme.InfoBgImageId = req.FormValue("info_bg_image_id")
+	theme.Name = req.FormValue("blog_name")
+	theme.BgColor = req.FormValue("bg_color")
+	theme.InfoBgColor = req.FormValue("info_bg_color")
+	theme.NameColor = req.FormValue("name_color")
+	if err := repo.Update(theme); err != nil {
+		this.InternalError(err)
+		return
+	}
 }

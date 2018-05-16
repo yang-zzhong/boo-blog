@@ -95,17 +95,6 @@ func (this *Tag) Search(req *httprouter.Request) {
 	this.renderRepo(repo)
 }
 
-func (this *Tag) Get(req *httprouter.Request, _ *helpers.P) {
-	var repo *Repo
-	var err error
-	if repo, err = model.NewTagRepo(); err != nil {
-		this.InternalError(err)
-		return
-	}
-	repo.OrderBy("created_at", DESC)
-	this.renderRepo(repo)
-}
-
 func (this *Tag) renderRepo(repo *Repo) {
 	var models map[string]interface{}
 	var err error
