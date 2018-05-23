@@ -9,6 +9,7 @@ import (
 
 func AuthUser(w http.ResponseWriter, req *httprouter.Request, p *helpers.P) bool {
 	s, _ := session.Store.Get(req.Request, "auth")
+	s.Options.Domain = "192.168.3.206:8081"
 	var userId interface{}
 	var ok bool
 	if userId, ok = s.Values["user_id"]; !ok || userId == nil {

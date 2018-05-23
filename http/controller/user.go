@@ -2,6 +2,7 @@ package controller
 
 import (
 	"boo-blog/model"
+	"database/sql"
 	helpers "github.com/yang-zzhong/go-helpers"
 	httprouter "github.com/yang-zzhong/go-httprouter"
 	. "github.com/yang-zzhong/go-model"
@@ -75,17 +76,17 @@ func (this *User) SaveBlogInfo(req *httprouter.Request, p *helpers.P) {
 		return
 	}
 	if m := repo.Find(p.Get("user_id")); m != nil {
-		theme = m.(repo.Theme)
+		theme = m.(model.Theme)
 	} else {
 		this.String("没有找到主题", 404)
 		return
 	}
-	theme.BgImageId = req.FormValue("bg_image_id")
-	theme.InfoBgImageId = req.FormValue("info_bg_image_id")
+	theme.BgImageId = sql.NullString{req.FormValue("bg_image_id"), true}
+	theme.InfoBgImageId = sql.NullString{req.FormValue("info_bg_image_id"), true}
 	theme.Name = req.FormValue("blog_name")
-	theme.BgColor = req.FormValue("bg_color")
-	theme.InfoBgColor = req.FormValue("info_bg_color")
-	theme.NameColor = req.FormValue("name_color")
+	theme.BgColor = sql.NullString{req.FormValue("bg_color"), true}
+	theme.InfoBgColor = sql.NullString{req.FormValue("info_bg_color"), true}
+	theme.NameColor = sql.NullString{req.FormValue("name_color"), true}
 	if err := repo.Update(theme); err != nil {
 		this.InternalError(err)
 		return

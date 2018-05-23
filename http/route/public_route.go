@@ -67,7 +67,7 @@ func registerUserPublicRoutes(router *httprouter.Router) {
 	})
 }
 
-func registerUserImageRoutes(router *httprouter.Router) {
+func registerImagePublicRoutes(router *httprouter.Router) {
 	router.Get("/images", func(w ResponseWriter, req *httprouter.Request, _ *P) {
 		image := &controller.Image{controller.NewController(w)}
 		image.Find(req)

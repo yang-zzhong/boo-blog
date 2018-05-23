@@ -1,7 +1,6 @@
 package route
 
 import (
-	"boo-blog/http/controller"
 	"boo-blog/http/middleware"
 	. "github.com/yang-zzhong/go-helpers"
 	httprouter "github.com/yang-zzhong/go-httprouter"
@@ -12,7 +11,16 @@ import (
 func Router(docRoot string) *httprouter.Router {
 	router := httprouter.NewRouter()
 	router.DocRoot = docRoot
-	router.Group("/api", httprouter.NewMs(), func(router *httprouter.Router) {
+	router.Before = func(w ResponseWriter, req *httprouter.Request, p *P) bool {
+		if req.Request.Method == MethodOptions {
+			middleware.AcrossDomain(w, req, p)
+			return false
+		}
+		return true
+	}
+	ms := httprouter.NewMs()
+	ms.Append(middleware.AcrossDomain)
+	router.Group("/api", ms, func(router *httprouter.Router) {
 		registerPublicRoute(router)
 		ms := httprouter.NewMs()
 		ms.Append(middleware.AuthUser)
