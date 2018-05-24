@@ -77,21 +77,25 @@ func (this *Login) Login(req *httprouter.Request) {
 		this.String("用户名或密码不正确", 500)
 		return
 	}
-	s, _ := session.Store.Get(req.Request, "auth")
-	s.Values["user_id"] = u.Id
-	s.Save(req.Request, this.ResponseWriter())
+	id := session.Save(&user)
+
+	// s, _ := session.Store.Get(req.Request, "auth")
+	// s.Values["user_id"] = u.Id
+	// s.Save(req.Request, this.ResponseWriter())
 
 	this.Json(map[string]interface{}{
+		"sId":  id,
 		"id":   user.Id,
 		"name": user.Name,
 	}, 200)
 }
 
 func (this *Login) Logout(req *httprouter.Request) {
-	s, _ := session.Store.Get(req.Request, "auth")
-	s.Values["user_id"] = nil
+	session.Del(req.Header.Get("id"))
+	// s, _ := session.Store.Get(req.Request, "auth")
+	// s.Values["user_id"] = nil
 
-	s.Save(req.Request, this.ResponseWriter())
+	// s.Save(req.Request, this.ResponseWriter())
 }
 
 func (this *Login) CreateUser(repo *Repo, user *model.User) error {

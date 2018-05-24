@@ -96,9 +96,7 @@ func (this *Article) FetchUserBlog(req *httprouter.Request, p *helpers.P) {
 		this.InternalError(err)
 		return
 	}
-	repo.Where("user_id", p.Get("user_id")).
-		Where("url_id", p.Get("url_id"))
-
+	repo.Where("user_id", p.Get("user_id")).Where("url_id", p.Get("url_id"))
 	if m := repo.One(); m != nil {
 		article = m.(model.Article)
 	} else {
@@ -125,7 +123,6 @@ func (this *Article) Create(req *httprouter.Request, p *helpers.P) {
 		this.InternalError(err)
 		return
 	}
-	log.Println(1)
 	article := model.NewArticle()
 	article.Title = req.FormValue("title")
 	article.UserId = p.Get("visitor_id").(string)

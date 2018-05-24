@@ -8,15 +8,15 @@ import (
 )
 
 func AuthUser(w http.ResponseWriter, req *httprouter.Request, p *helpers.P) bool {
-	s, _ := session.Store.Get(req.Request, "auth")
-	s.Options.Domain = "192.168.3.206:8081"
-	var userId interface{}
-	var ok bool
-	if userId, ok = s.Values["user_id"]; !ok || userId == nil {
+	user, logged := session.User(req.Header.Get("id"))
+	// s, _ := session.Store.Get(req.Request, "auth")
+	// s.Options.Domain = "192.168.3.206:8081"
+	if !logged {
 		w.WriteHeader(401)
 		return false
 	}
-	p.Set("visitor_id", userId)
+	p.Set("visitor_id", user.Id)
+	p.Set("visitor", user)
 
 	return true
 }
