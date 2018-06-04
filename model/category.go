@@ -17,6 +17,7 @@ type Category struct {
 	Tags      []string  `db:"tags varchar(512) nil"`
 	CreatedAt time.Time `db:"created_at datetime"`
 	UpdatedAt time.Time `db:"updated_at datetime"`
+	*repo.Base
 }
 
 func (ig *Category) TableName() string {
@@ -53,10 +54,26 @@ func (ig *Category) Value(fieldName string, val interface{}) (result reflect.Val
 	return
 }
 
+func (ig *Category) One(name string) (interface{}, error) {
+	return repo.One(ig.Base, ig, name)
+}
+
+func (ig *Category) Many(name string) (map[interface{}]interface{}, error) {
+	return repo.Many(ig.Base, ig, name)
+}
+
 func NewCategory() *Category {
-	return CreateModel(new(Category)).(*Category)
+	cate := CreateModel(new(Category)).(*Category)
+	cate.DeclareOne("user", new(User), map[string]string{
+		"user_id": "id",
+	})
+	cate.DeclareMany("blogs", new(Article), map[string]string{
+		"id": "cate_id",
+	})
+
+	return cate
 }
 
 func NewCategoryRepo() (*repo.Repo, error) {
-	return CreateRepo(new(Category))
+	return CreateRepo(NewCategory())
 }

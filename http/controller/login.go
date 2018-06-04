@@ -29,8 +29,8 @@ func (this *Login) Register(req *httprouter.Request) {
 	}
 	user := model.NewUser()
 	user.Name = req.FormValue("name")
-	user.NickName = sql.NullString{user.Name, true}
-	user.EmailAddr = sql.NullString{req.FormValue("email_addr"), false}
+	user.NickName = user.Name
+	user.EmailAddr = req.FormValue("email_addr")
 	user.Password = user.Encrypt(req.FormValue("password"))
 	repo.Where("name", req.FormValue("name"))
 	if req.FormValue("email_addr") != "" {

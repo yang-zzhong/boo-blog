@@ -6,7 +6,6 @@ import (
 	httprouter "github.com/yang-zzhong/go-httprouter"
 	. "github.com/yang-zzhong/go-model"
 	. "github.com/yang-zzhong/go-querybuilder"
-	"log"
 )
 
 type Article struct{ *Controller }
@@ -30,14 +29,15 @@ func (this *Article) Find(req *httprouter.Request) {
 		repo.Where("tags", LIKE, "%"+tag+"%")
 	}
 	if keyword := req.FormValue("keyword"); keyword != "" {
-		repo.Where("title", LIKE, "%"+keyword+"%").Or().Where("content", LIKE, "%"+keyword+"%")
+		repo.Where("title", LIKE, "%"+keyword+"%").
+			Or().Where("content", LIKE, "%"+keyword+"%")
 	}
 	if page := req.FormInt("page"); page != 0 {
 		pageSize := req.FormInt("page_size")
 		if pageSize == 0 {
 			pageSize = 10
 		}
-		repo.Offset((int)((page - 1) * pageSize)).Limit((int)(pageSize))
+		repo.Page(page, pageSize)
 	}
 	repo.OrderBy("created_at", DESC)
 	if items, err = repo.Fetch(); err != nil {
@@ -47,15 +47,12 @@ func (this *Article) Find(req *httprouter.Request) {
 	for _, item := range items {
 		atl := item.(model.Article)
 		result = append(result, map[string]interface{}{
-			"id":         atl.Id,
-			"title":      atl.Title,
-			"cate_id":    atl.CateId,
-			"user_id":    atl.UserId,
-			"url_id":     atl.UrlId,
-			"overview":   atl.Overview,
-			"tags":       atl.Tags,
-			"created_at": atl.CreatedAt,
-			"updated_at": atl.UpdatedAt,
+			"id":        atl.Id,
+			"title":     atl.Title,
+			"url_id":    atl.UrlId,
+			"overview":  atl.Overview,
+			"tags":      atl.Tags,
+			"CreatedAt": article.CreatedAt,
 		})
 	}
 	this.Json(result, 200)
@@ -80,11 +77,8 @@ func (this *Article) GetOne(req *httprouter.Request, p *helpers.P) {
 		"id":        article.Id,
 		"title":     article.Title,
 		"content":   (&article).Content(),
-		"userId":    article.UserId,
-		"cateId":    article.CateId,
 		"Tags":      article.Tags,
 		"CreatedAt": article.CreatedAt,
-		"UpdatedAt": article.UpdatedAt,
 	}, 200)
 }
 
@@ -108,11 +102,8 @@ func (this *Article) FetchUserBlog(req *httprouter.Request, p *helpers.P) {
 		"title":     article.Title,
 		"overview":  article.Overview,
 		"content":   (&article).Content(),
-		"userId":    article.UserId,
-		"cateId":    article.CateId,
 		"Tags":      article.Tags,
 		"CreatedAt": article.CreatedAt,
-		"UpdatedAt": article.UpdatedAt,
 	}, 200)
 }
 
@@ -162,7 +153,7 @@ func (this *Article) Update(req *httprouter.Request, p *helpers.P) {
 		this.InternalError(err)
 		return
 	}
-	if m := repo.Find(p.Get("id").(string)); m != nil {
+	if m := repo.Find(p.Get("id")); m != nil {
 		article = m.(model.Article)
 	} else {
 		this.String("文章未找到", 404)

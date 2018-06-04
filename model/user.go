@@ -10,15 +10,15 @@ import (
 )
 
 type User struct {
-	Id          string         `db:"id char(32) pk"`
-	Name        string         `db:"name varchar(128) uk"`
-	NickName    sql.NullString `db:"nickname varchar(128) nil"`
-	EmailAddr   sql.NullString `db:"email_addr varchar(128) nil"`
-	PhoneNumber sql.NullString `db:"phone_number varchar(128) nil"`
-	Password    string         `db:"password varchar(128)"`
-	Salt        string         `db:"salt char(8)"`
-	CreatedAt   time.Time      `db:"created_at datetime"`
-	UpdatedAt   time.Time      `db:"updated_at datetime"`
+	Id          string    `db:"id char(32) pk"`
+	Name        string    `db:"name varchar(128) uk"`
+	NickName    string    `db:"nickname varchar(128) nil"`
+	EmailAddr   string    `db:"email_addr varchar(128) nil"`
+	PhoneNumber string    `db:"phone_number varchar(128) nil"`
+	Password    string    `db:"password varchar(128)"`
+	Salt        string    `db:"salt char(8)"`
+	CreatedAt   time.Time `db:"created_at datetime"`
+	UpdatedAt   time.Time `db:"updated_at datetime"`
 }
 
 func (user *User) TableName() string {

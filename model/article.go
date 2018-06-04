@@ -22,6 +22,7 @@ type Article struct {
 	Tags      []string  `db:"tags varchar(256) nil"`
 	CreatedAt time.Time `db:"created_at datetime"`
 	UpdatedAt time.Time `db:"updated_at datetime"`
+	*Base
 }
 
 func (atl *Article) PK() string {
@@ -97,6 +98,14 @@ func (atl *Article) TableName() string {
 	return "article"
 }
 
+func (atl *Article) One(name string) (interface{}, error) {
+	return One(atl.Base, atl, name)
+}
+
+func (atl *Article) Many(name string) (map[interface{}]interface{}, error) {
+	return Many(atl.Base, atl, name)
+}
+
 func (atl *Article) NewId() interface{} {
 	return helpers.RandString(32)
 }
@@ -125,9 +134,17 @@ func (atl *Article) Value(fieldName string, value interface{}) (result reflect.V
 }
 
 func NewArticle() *Article {
-	return CreateModel(new(Article)).(*Article)
+	atl := CreateModel(new(Article)).(*Article)
+	atl.DeclareOne("author", new(User), map[string]string{
+		"user_id": "id",
+	})
+	atl.DeclareOne("cate", new(Category), map[string]string{
+		"cate_id": "id",
+	})
+
+	return atl
 }
 
 func NewArticleRepo() (*Repo, error) {
-	return CreateRepo(new(Article))
+	return CreateRepo(NewArticle())
 }
