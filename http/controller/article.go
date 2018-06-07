@@ -74,7 +74,6 @@ func (this *Article) FetchUserBlog(req *httprouter.Request, p *helpers.P) {
 }
 
 func (this *Article) Create(req *httprouter.Request, p *helpers.P) {
-	var err error
 	blog := model.NewBlog().Instance()
 	blog.Fill(map[string]interface{}{
 		"title":   req.FormValue("title"),
@@ -98,11 +97,11 @@ func (this *Article) Create(req *httprouter.Request, p *helpers.P) {
 		this.String("至少选择一个标签", 500)
 		return
 	}
-	if err = blog.SaveContent(req.FormValue("content")); err != nil {
+	if err := blog.SaveContent(req.FormValue("content")); err != nil {
 		this.InternalError(err)
 		return
 	}
-	if err = blog.Save(); err != nil {
+	if err := blog.Save(); err != nil {
 		this.InternalError(err)
 		return
 	}

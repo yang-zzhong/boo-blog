@@ -43,7 +43,7 @@ func (blog *Blog) WithUrlId() *Blog {
 }
 
 func (blog *Blog) GetUrlId(title string) string {
-	reg, _ := regexp.Compile("\\s|\\?|\\&")
+	reg, _ := regexp.Compile("\\s|\\?|\\&|\"|'")
 	return reg.ReplaceAllString(title, "_")
 }
 
