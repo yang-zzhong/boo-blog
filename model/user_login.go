@@ -1,7 +1,6 @@
 package model
 
 import (
-	"database/sql"
 	helpers "github.com/yang-zzhong/go-helpers"
 	. "github.com/yang-zzhong/go-model"
 	"time"
@@ -28,9 +27,5 @@ func (ul *UserLogin) NewId() interface{} {
 }
 
 func NewUserLogin() *UserLogin {
-	return CreateModel(new(UserLogin)).(*UserLogin)
-}
-
-func NewUserLoginRepo() (*Repo, error) {
-	return CreateRepo(new(Image))
+	return NewModel(new(UserLogin)).(*UserLogin)
 }

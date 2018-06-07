@@ -2,93 +2,53 @@ package controller
 
 import (
 	"boo-blog/model"
-	"database/sql"
 	helpers "github.com/yang-zzhong/go-helpers"
 	httprouter "github.com/yang-zzhong/go-httprouter"
-	. "github.com/yang-zzhong/go-model"
 )
 
 type User struct{ *Controller }
 
 func (this *User) One(req *httprouter.Request, p *helpers.P) {
-	var repo *Repo
-	var err error
-	var user model.User
-	var theme model.Theme
-	if repo, err = model.NewUserRepo(); err != nil {
+	user := model.NewUser()
+	user.Repo().With("theme").Where("name", p.Get("name"))
+	if m, exist, err := user.Repo().One(); err != nil {
 		this.InternalError(err)
 		return
-	}
-	repo.Where("name", p.Get("name"))
-	if m := repo.One(); m != nil {
-		user = m.(model.User)
-	} else {
+	} else if !exist {
 		this.String("没有找到用户", 404)
 		return
-	}
-	if repo, err = model.NewThemeRepo(); err != nil {
-		this.InternalError(err)
-		return
-	}
-	if m := repo.Find(user.Id); m != nil {
-		theme = m.(model.Theme)
 	} else {
-		this.String("服务器出错咯", 500)
+		user = m.(*model.User)
+		result := user.Map()
+		if theme, err := m.(*model.User).One("theme"); err != nil {
+			this.InternalError(err)
+			return
+		} else {
+			for f, v := range theme.(*model.Theme).Map() {
+				result[f] = v
+			}
+			this.Json(result, 200)
+		}
 	}
-	result := map[string]interface{}{
-		"id":               user.Id,
-		"name":             user.Name,
-		"nickname":         "",
-		"bg_image_id":      "",
-		"info_bg_image_id": "",
-		"bg_color":         "",
-		"info_bg_color":    "",
-		"name_color":       "",
-		"blog_name":        theme.Name,
-	}
-	if user.NickName.Valid {
-		result["nickname"] = user.NickName.String
-	}
-	if theme.BgImageId.Valid {
-		result["bg_image_id"] = theme.BgImageId.String
-	}
-	if theme.InfoBgImageId.Valid {
-		result["info_bg_image_id"] = theme.InfoBgImageId.String
-	}
-	if theme.BgColor.Valid {
-		result["bg_color"] = theme.BgColor.String
-	}
-	if theme.InfoBgColor.Valid {
-		result["info_bg_color"] = theme.InfoBgColor.String
-	}
-	if theme.NameColor.Valid {
-		result["name_color"] = theme.NameColor.String
-	}
-	this.Json(result, 200)
 }
 
 func (this *User) SaveBlogInfo(req *httprouter.Request, p *helpers.P) {
-	var repo *Repo
-	var err error
-	var theme model.Theme
-	if repo, err = model.NewThemeRepo(); err != nil {
+	theme := model.NewTheme()
+	if m, exist, err := theme.Repo().Find(p.Get("user_id")); err != nil {
 		this.InternalError(err)
-		return
-	}
-	if m := repo.Find(p.Get("user_id")); m != nil {
-		theme = m.(model.Theme)
-	} else {
+	} else if !exist {
 		this.String("没有找到主题", 404)
-		return
-	}
-	theme.BgImageId = sql.NullString{req.FormValue("bg_image_id"), true}
-	theme.InfoBgImageId = sql.NullString{req.FormValue("info_bg_image_id"), true}
-	theme.Name = req.FormValue("blog_name")
-	theme.BgColor = sql.NullString{req.FormValue("bg_color"), true}
-	theme.InfoBgColor = sql.NullString{req.FormValue("info_bg_color"), true}
-	theme.NameColor = sql.NullString{req.FormValue("name_color"), true}
-	if err := repo.Update(theme); err != nil {
-		this.InternalError(err)
-		return
+	} else {
+		theme = m.(*model.Theme)
+		theme.Fill(map[string]interface{}{
+			"bg_image_id":   req.FormValue("bg_image_id"),
+			"name":          req.FormValue("blog_name"),
+			"bg_color":      req.FormValue("bg_color"),
+			"info_bg_color": req.FormValue("info_bg_color"),
+			"name_color":    req.FormValue("name_color"),
+		})
+		if err := theme.Save(); err != nil {
+			this.InternalError(err)
+		}
 	}
 }

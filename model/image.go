@@ -5,13 +5,12 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"github.com/nfnt/resize"
-	. "github.com/yang-zzhong/go-model"
+	model "github.com/yang-zzhong/go-model"
 	goImage "image"
 	"image/gif"
 	"image/jpeg"
 	"image/png"
 	"io"
-	"log"
 	mp "mime/multipart"
 	"os"
 	"path"
@@ -33,14 +32,11 @@ type Image struct {
 	Size      int64     `db:"size int"`
 	CreatedAt time.Time `db:"created_at datetime"`
 	UpdatedAt time.Time `db:"updated_at datetime"`
+	*model.Base
 }
 
 func (image *Image) TableName() string {
 	return "image"
-}
-
-func (image *Image) PK() string {
-	return "hash"
 }
 
 func (image *Image) Pathfile() string {
@@ -81,14 +77,14 @@ func (image *Image) FillWithMultipart(src mp.File, header *mp.FileHeader) error 
  * 判断文件是否存在
  */
 func (image *Image) RecordExisted() (exists bool, err error) {
-	repo, err := NewImageRepo()
-	if err != nil {
-		log.Fatal(err)
-		return
+	image.Repo().Where("hash", image.Hash)
+	if has, perr := image.Repo().Count(); err != nil {
+		err = perr
+	} else if has > 0 {
+		exists = true
+	} else {
+		exists = false
 	}
-	repo.Where("hash", image.Hash)
-	exists = repo.Count() > 0
-
 	return
 }
 
@@ -146,9 +142,10 @@ func (image *Image) Resize(w io.Writer, width, height uint, interp resize.Interp
 }
 
 func NewImage() *Image {
-	return new(Image)
-}
+	image := model.NewModel(new(Image)).(*Image)
+	image.DeclareMany("user_images", new(UserImage), map[string]string{
+		"hash": "hash",
+	})
 
-func NewImageRepo() (imageRepo *Repo, err error) {
-	return CreateRepo(new(Image))
+	return image
 }

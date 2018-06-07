@@ -1,8 +1,7 @@
 package model
 
 import (
-	helpers "github.com/yang-zzhong/go-helpers"
-	. "github.com/yang-zzhong/go-model"
+	model "github.com/yang-zzhong/go-model"
 	"golang.org/x/net/html"
 	"io/ioutil"
 	"log"
@@ -12,7 +11,7 @@ import (
 	"time"
 )
 
-type Article struct {
+type Blog struct {
 	Id        string    `db:"id char(32) pk"`
 	Title     string    `db:"title varchar(256)"`
 	Overview  string    `db:"overview text"`
@@ -22,33 +21,33 @@ type Article struct {
 	Tags      []string  `db:"tags varchar(256) nil"`
 	CreatedAt time.Time `db:"created_at datetime"`
 	UpdatedAt time.Time `db:"updated_at datetime"`
-	*Base
+	*model.Base
 }
 
-func (atl *Article) PK() string {
-	return "id"
+func (blog *Blog) TableName() string {
+	return "article"
 }
 
-func (atl *Article) SaveContent(content string) error {
-	log.Print(atl.Pathfile())
-	return ioutil.WriteFile(atl.Pathfile(), []byte(content), 0755)
+func (blog *Blog) SaveContent(content string) error {
+	log.Print(blog.Pathfile())
+	return ioutil.WriteFile(blog.Pathfile(), []byte(content), 0755)
 }
 
-func (atl *Article) Pathfile() string {
-	return conf.blog_dir + atl.UserId + "-" + atl.Title + ".html"
+func (blog *Blog) Pathfile() string {
+	return conf.blog_dir + blog.UserId + "-" + blog.Title + ".html"
 }
 
-func (atl *Article) WithUrlId() *Article {
-	atl.UrlId = atl.GetUrlId(atl.Title)
-	return atl
+func (blog *Blog) WithUrlId() *Blog {
+	blog.UrlId = blog.GetUrlId(blog.Title)
+	return blog
 }
 
-func (atl *Article) GetUrlId(title string) string {
+func (blog *Blog) GetUrlId(title string) string {
 	reg, _ := regexp.Compile("\\s|\\?|\\&")
 	return reg.ReplaceAllString(title, "_")
 }
 
-func (atl *Article) WithOverview(content string) {
+func (blog *Blog) WithOverview(content string) {
 	reader := strings.NewReader(content)
 	node, _ := html.Parse(reader)
 	type callback func(n *html.Node) bool
@@ -85,41 +84,24 @@ func (atl *Article) WithOverview(content string) {
 		}
 		return false
 	})
-	log.Print(overview)
-	atl.Overview = overview
+	blog.Overview = overview
 }
 
-func (atl *Article) Content() string {
-	content, _ := ioutil.ReadFile(atl.Pathfile())
+func (blog *Blog) Content() string {
+	content, _ := ioutil.ReadFile(blog.Pathfile())
 	return string(content)
 }
 
-func (atl *Article) TableName() string {
-	return "article"
-}
-
-func (atl *Article) One(name string) (interface{}, error) {
-	return One(atl.Base, atl, name)
-}
-
-func (atl *Article) Many(name string) (map[interface{}]interface{}, error) {
-	return Many(atl.Base, atl, name)
-}
-
-func (atl *Article) NewId() interface{} {
-	return helpers.RandString(32)
-}
-
-func (atl *Article) DBValue(fieldName string, value interface{}) interface{} {
-	if fieldName == "tags" {
+func (blog *Blog) DBValue(colname string, value interface{}) interface{} {
+	if colname == "tags" {
 		result := strings.Join(value.([]string), ",")
 		return result
 	}
 	return value
 }
 
-func (atl *Article) Value(fieldName string, value interface{}) (result reflect.Value, catched bool) {
-	if fieldName == "tags" {
+func (blog *Blog) Value(colname string, value interface{}) (result reflect.Value, catched bool) {
+	if colname == "tags" {
 		catched = true
 		val, _ := value.(string)
 		if val != "" {
@@ -133,18 +115,18 @@ func (atl *Article) Value(fieldName string, value interface{}) (result reflect.V
 	return
 }
 
-func NewArticle() *Article {
-	atl := CreateModel(new(Article)).(*Article)
-	atl.DeclareOne("author", new(User), map[string]string{
+func NewBlog() *Blog {
+	blog := model.NewModel(new(Blog)).(*Blog)
+	blog.DeclareOne("author", new(User), map[string]string{
 		"user_id": "id",
 	})
-	atl.DeclareOne("cate", new(Category), map[string]string{
+	blog.DeclareOne("cate", new(Cate), map[string]string{
 		"cate_id": "id",
 	})
 
-	return atl
+	return blog
 }
 
-func NewArticleRepo() (*Repo, error) {
-	return CreateRepo(NewArticle())
+func (blog *Blog) Instance() *Blog {
+	return Instance(blog).(*Blog)
 }

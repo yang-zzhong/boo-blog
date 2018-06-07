@@ -4,10 +4,10 @@ import (
 	"database/sql"
 	"github.com/go-ini/ini"
 	_ "github.com/go-sql-driver/mysql"
-	. "github.com/yang-zzhong/go-model"
+	helpers "github.com/yang-zzhong/go-helpers"
+	model "github.com/yang-zzhong/go-model"
 	. "github.com/yang-zzhong/go-querybuilder"
 	"os"
-	"reflect"
 	"time"
 )
 
@@ -27,8 +27,6 @@ type config struct {
 }
 
 var conf config
-var conn *sql.DB
-var connected bool
 
 func InitDriver(config *ini.Section) {
 	conf.driver = config.Key("driver").String()
@@ -39,6 +37,11 @@ func InitDriver(config *ini.Section) {
 	conf.database = config.Key("database").String()
 	conf.image_dir = config.Key("image_dir").String()
 	conf.blog_dir = config.Key("blog_dir").String()
+	if conn, err := sql.Open(conf.driver, dsn()); err != nil {
+		panic(err)
+	} else {
+		model.Config(conn, &MysqlModifier{})
+	}
 	sureDir(conf.image_dir)
 	sureDir(conf.blog_dir)
 }
@@ -62,22 +65,6 @@ func sureDir(dir string) {
 	}
 }
 
-func init() {
-	connected = false
-}
-
-func driver() *sql.DB {
-	if connected {
-		return conn
-	}
-	var err error
-	if conn, err = sql.Open(conf.driver, dsn()); err != nil {
-		panic(err)
-	}
-	connected = true
-	return conn
-}
-
 func dsn() string {
 	dsn := conf.username + ":" + conf.password + "@"
 	if conf.host != "" {
@@ -91,28 +78,24 @@ func dsn() string {
 	return dsn
 }
 
-func CreateModel(model interface{}) interface{} {
-	mValue := reflect.ValueOf(model).Elem()
-	mm := NewModelMapper(model)
-	if item, ok := mm.FnFds[model.(Model).PK()]; ok {
-		IdValue := mValue.FieldByName(item.Name)
-		IdValue.SetString(model.(IdMaker).NewId().(string))
-	}
-
-	return model
-}
-
-func CreateRepo(model interface{}) (repo *Repo, err error) {
-	repo = NewRepo(model, driver(), &MysqlModifier{})
-	repo.OnUpdate(func(model interface{}) {
-		mValue := reflect.ValueOf(model).Elem()
-		mValue.FieldByName("UpdatedAt").Set(reflect.ValueOf(time.Now()))
+func Instance(m model.Model) interface{} {
+	m.Set(m.PK(), helpers.RandString(32))
+	m.OnCreate(func(m model.Model) {
+		if !m.Has("updated_at") {
+			return
+		}
+		if ca := m.Get("created_at"); ca == nil {
+			m.Set("created_at", time.Now())
+		}
 	})
-	repo.OnCreate(func(model interface{}) {
-		mValue := reflect.ValueOf(model).Elem()
-		now := reflect.ValueOf(time.Now())
-		mValue.FieldByName("CreatedAt").Set(now)
-		mValue.FieldByName("UpdatedAt").Set(now)
+	m.OnUpdate(func(m model.Model) {
+		if !m.Has("updated_at") {
+			return
+		}
+		if ua := m.Get("updated_at"); ua == nil {
+			m.Set("updated_at", time.Now())
+		}
 	})
-	return
+
+	return m
 }

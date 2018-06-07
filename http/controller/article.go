@@ -4,194 +4,153 @@ import (
 	"boo-blog/model"
 	helpers "github.com/yang-zzhong/go-helpers"
 	httprouter "github.com/yang-zzhong/go-httprouter"
-	. "github.com/yang-zzhong/go-model"
 	. "github.com/yang-zzhong/go-querybuilder"
 )
 
 type Article struct{ *Controller }
 
 func (this *Article) Find(req *httprouter.Request) {
-	var repo *Repo
-	var err error
-	var items map[string]interface{}
-	var result []map[string]interface{}
-	if repo, err = model.NewArticleRepo(); err != nil {
-		this.InternalError(err)
-		return
-	}
+	blog := model.NewBlog()
 	if ownerId := req.FormValue("owner_id"); ownerId != "" {
-		repo.Where("user_id", ownerId)
+		blog.Repo().Where("user_id", ownerId)
 	}
 	if cateId := req.FormValue("cate_id"); cateId != "" {
-		repo.Where("cate_id", cateId)
+		blog.Repo().Where("cate_id", cateId)
 	}
 	if tag := req.FormValue("tag"); tag != "" {
-		repo.Where("tags", LIKE, "%"+tag+"%")
+		blog.Repo().Where("tags", LIKE, "%"+tag+"%")
 	}
 	if keyword := req.FormValue("keyword"); keyword != "" {
-		repo.Where("title", LIKE, "%"+keyword+"%").
+		blog.Repo().Where("title", LIKE, "%"+keyword+"%").
 			Or().Where("content", LIKE, "%"+keyword+"%")
 	}
-	if page := req.FormInt("page"); page != 0 {
-		pageSize := req.FormInt("page_size")
-		if pageSize == 0 {
-			pageSize = 10
+	if p := req.FormInt("page"); p != 0 {
+		ps := req.FormInt("page_size")
+		if ps == 0 {
+			ps = 10
 		}
-		repo.Page(page, pageSize)
+		blog.Repo().Page(int(p), int(ps))
 	}
-	repo.OrderBy("created_at", DESC)
-	if items, err = repo.Fetch(); err != nil {
+	blog.Repo().OrderBy("created_at", DESC)
+	if items, err := blog.Repo().Fetch(); err != nil {
 		this.InternalError(err)
 		return
+	} else {
+		result := []*model.Blog{}
+		for _, item := range items {
+			result = append(result, item.(*model.Blog))
+		}
+		this.Json(result, 200)
 	}
-	for _, item := range items {
-		atl := item.(model.Article)
-		result = append(result, map[string]interface{}{
-			"id":        atl.Id,
-			"title":     atl.Title,
-			"url_id":    atl.UrlId,
-			"overview":  atl.Overview,
-			"tags":      atl.Tags,
-			"CreatedAt": article.CreatedAt,
-		})
-	}
-	this.Json(result, 200)
 }
 
 func (this *Article) GetOne(req *httprouter.Request, p *helpers.P) {
-	var repo *Repo
-	var err error
-	var article model.Article
-	if repo, err = model.NewArticleRepo(); err != nil {
+	blog := model.NewBlog()
+	if m, ok, err := blog.Repo().Find(p.Get("id")); err != nil {
 		this.InternalError(err)
-		return
-	}
-	if m := repo.Find(p.Get("id").(string)); m != nil {
-		article = m.(model.Article)
+	} else if !ok {
+		this.String("文章没找到", 404)
 	} else {
-		this.String("文章未找到", 404)
-		return
+		this.Json(m, 200)
 	}
 
-	this.Json(map[string]interface{}{
-		"id":        article.Id,
-		"title":     article.Title,
-		"content":   (&article).Content(),
-		"Tags":      article.Tags,
-		"CreatedAt": article.CreatedAt,
-	}, 200)
 }
 
 func (this *Article) FetchUserBlog(req *httprouter.Request, p *helpers.P) {
-	var repo *Repo
-	var err error
-	var article model.Article
-	if repo, err = model.NewArticleRepo(); err != nil {
+	blog := model.NewBlog()
+	blog.Repo().
+		Where("user_id", p.Get("user_id")).
+		Where("url_id", p.Get("url_id"))
+	if m, ok, err := blog.Repo().One(); err != nil {
 		this.InternalError(err)
-		return
-	}
-	repo.Where("user_id", p.Get("user_id")).Where("url_id", p.Get("url_id"))
-	if m := repo.One(); m != nil {
-		article = m.(model.Article)
+	} else if ok {
+		blog = m.(*model.Blog)
+		data := blog.Map()
+		data["content"] = blog.Content()
+		this.Json(data, 200)
 	} else {
 		this.String("文章未找到", 404)
-		return
 	}
-	this.Json(map[string]interface{}{
-		"id":        article.Id,
-		"title":     article.Title,
-		"overview":  article.Overview,
-		"content":   (&article).Content(),
-		"Tags":      article.Tags,
-		"CreatedAt": article.CreatedAt,
-	}, 200)
 }
 
 func (this *Article) Create(req *httprouter.Request, p *helpers.P) {
-	var repo *Repo
 	var err error
-	if repo, err = model.NewArticleRepo(); err != nil {
+	blog := model.NewBlog().Instance()
+	blog.Fill(map[string]interface{}{
+		"title":   req.FormValue("title"),
+		"user_id": p.Get("visitor_id"),
+		"tags":    req.FormSlice("tags"),
+		"cate_id": req.FormValue("cate_id"),
+	})
+	blog.WithUrlId().WithOverview(req.FormValue("content"))
+	blog.Repo().Where("user_id", blog.UserId).Quote(func(repo *Builder) {
+		repo.Where("title", blog.Title)
+		repo.Or().Where("url_id", blog.UrlId)
+	})
+	if count, err := blog.Repo().Count(); err != nil {
 		this.InternalError(err)
 		return
-	}
-	article := model.NewArticle()
-	article.Title = req.FormValue("title")
-	article.UserId = p.Get("visitor_id").(string)
-	article.CateId = req.FormValue("cate_id")
-	article.Tags = req.FormSlice("tags")
-	article.WithUrlId().WithOverview(req.FormValue("content"))
-	repo.Where("user_id", article.UserId).Quote(func(repo *Builder) {
-		repo.Where("title", article.Title)
-		repo.Or().Where("url_id", article.UrlId)
-	})
-	if repo.Count() > 0 {
+	} else if count > 0 {
 		this.String("该标题已使用", 500)
 		return
 	}
-	if len(article.Tags) == 0 {
+	if len(blog.Tags) == 0 {
 		this.String("至少选择一个标签", 500)
 		return
 	}
-	if err = article.SaveContent(req.FormValue("content")); err != nil {
+	if err = blog.SaveContent(req.FormValue("content")); err != nil {
 		this.InternalError(err)
 		return
 	}
-	if err = repo.Create(article); err != nil {
+	if err = blog.Save(); err != nil {
 		this.InternalError(err)
 		return
 	}
-	this.Json(map[string]string{
-		"id": article.Id,
-	}, 200)
+	this.Json(blog, 200)
 }
 
 func (this *Article) Update(req *httprouter.Request, p *helpers.P) {
-	var repo *Repo
-	var err error
-	var article model.Article
-	if repo, err = model.NewArticleRepo(); err != nil {
+	blog := model.NewBlog()
+	if m, ok, err := blog.Repo().Find(p.Get("id")); err != nil {
 		this.InternalError(err)
 		return
-	}
-	if m := repo.Find(p.Get("id")); m != nil {
-		article = m.(model.Article)
-	} else {
+	} else if !ok {
 		this.String("文章未找到", 404)
 		return
+	} else {
+		blog = m.(*model.Blog)
 	}
-	if article.UserId != p.Get("visitor_id").(string) {
+	if blog.UserId != p.Get("visitor_id").(string) {
 		this.String("你没有权限修改别人的文章", 500)
 		return
 	}
-	article.Title = req.FormValue("title")
-	article.CateId = req.FormValue("cate_id")
-	article.Tags = req.FormSlice("tags")
-	article.WithUrlId().WithOverview(req.FormValue("content"))
-	if err = repo.Update(&article); err != nil {
+	blog.Fill(map[string]interface{}{
+		"title":   req.FormValue("title"),
+		"cate_id": req.FormValue("cate_id"),
+		"tags":    req.FormSlice("tags"),
+	})
+	blog.WithUrlId().WithOverview(req.FormValue("content"))
+	if err := blog.Save(); err != nil {
 		this.InternalError(err)
 	}
 }
 
 func (this *Article) Remove(req *httprouter.Request, p *helpers.P) {
-	var repo *Repo
-	var err error
-	var article model.Article
-	if repo, err = model.NewArticleRepo(); err != nil {
+	blog := model.NewBlog()
+	if m, ok, err := blog.Repo().Find(p.Get("id")); err != nil {
 		this.InternalError(err)
 		return
-	}
-	if m := repo.Find(p.Get("id").(string)); m != nil {
-		article = m.(model.Article)
-	} else {
+	} else if ok {
 		this.String("文章未找到", 404)
 		return
+	} else {
+		blog = m.(*model.Blog)
 	}
-	if article.UserId != p.Get("visitor_id").(string) {
+	if blog.UserId != p.Get("visitor_id").(string) {
 		this.String("你没有权限修改别人的文章", 500)
 		return
 	}
-	repo.Where("id", article.Id)
-	if err = repo.Remove(); err != nil {
+	if err := blog.Delete(); err != nil {
 		this.InternalError(err)
 	}
 }

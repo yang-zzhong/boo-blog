@@ -6,8 +6,6 @@ import (
 	"context"
 	"database/sql"
 	httprouter "github.com/yang-zzhong/go-httprouter"
-	. "github.com/yang-zzhong/go-model"
-	"log"
 )
 
 type Login struct{ *Controller }
@@ -21,67 +19,57 @@ func (this *Login) Register(req *httprouter.Request) {
 		this.String("密码长度不够", 500)
 		return
 	}
-	var repo *Repo
-	var err error
-	if repo, err = model.NewUserRepo(); err != nil {
+	user := model.NewUser().Instance()
+	user.Fill(map[string]interface{}{
+		"name":       req.FormValue("name"),
+		"nickname":   req.FormValue("name"),
+		"email_addr": req.FormValue("email_addr"),
+		"password":   user.Encrypt(req.FormValue("password")),
+	})
+	user.Repo().Where("name", user.Name)
+	if user.EmailAddr != "" {
+		user.Repo().Or().Where("email_addr", req.FormValue("email_addr"))
+	}
+	if user.PhoneNumber != "" {
+		user.Repo().Or().Where("phone_number", req.FormValue("phone_number"))
+	}
+	if count, err := user.Repo().Count(); err != nil {
 		this.InternalError(err)
 		return
-	}
-	user := model.NewUser()
-	user.Name = req.FormValue("name")
-	user.NickName = user.Name
-	user.EmailAddr = req.FormValue("email_addr")
-	user.Password = user.Encrypt(req.FormValue("password"))
-	repo.Where("name", req.FormValue("name"))
-	if req.FormValue("email_addr") != "" {
-		repo.Or().Where("email_addr", req.FormValue("email_addr"))
-	}
-	if req.FormValue("phone_number") != "" {
-		repo.Or().Where("phone_number", req.FormValue("phone_number"))
-	}
-	if repo.Count() > 0 {
+	} else if count > 0 {
 		this.String("电话或者邮箱或者用户名已被使用", 500)
 		return
 	}
-	if err = this.CreateUser(repo, user); err != nil {
+	if err := this.CreateUser(user); err != nil {
 		this.InternalError(err)
 		return
 	}
 }
 
 func (this *Login) Login(req *httprouter.Request) {
-	var repo *Repo
-	var err error
 	var account string
-	var m interface{}
 	if account = req.FormValue("account"); account == "" {
 		this.String("没有制定账号", 500)
 		return
 	}
-	if repo, err = model.NewUserRepo(); err != nil {
-		this.InternalError(nil)
-		return
-	}
-	repo.Where("name", account).Or().
+	user := model.NewUser()
+	user.Repo().Where("name", account).Or().
 		WhereRaw("email_addr is not null").Where("email_addr", account).Or().
 		WhereRaw("phone_number is not null").Where("phone_number", account)
-	log.Print(repo.ForQuery(), repo.Params())
-	if m = repo.One(); m == nil {
-		log.Print("用户名没找到")
+	if m, exist, err := user.Repo().One(); err != nil {
+		this.InternalError(err)
+		return
+	} else if !exist {
+		this.String("用户名或密码不正确", 500)
+		return
+	} else {
+		user = m.(*model.User)
+	}
+	if user.Encrypt(req.FormValue("password")) != user.Password {
 		this.String("用户名或密码不正确", 500)
 		return
 	}
-	user := m.(model.User)
-	u := &user
-	if u.Encrypt(req.FormValue("password")) != u.Password {
-		this.String("用户名或密码不正确", 500)
-		return
-	}
-	id := session.Save(&user)
-
-	// s, _ := session.Store.Get(req.Request, "auth")
-	// s.Values["user_id"] = u.Id
-	// s.Save(req.Request, this.ResponseWriter())
+	id := session.Save(user)
 
 	this.Json(map[string]interface{}{
 		"sId":  id,
@@ -92,26 +80,22 @@ func (this *Login) Login(req *httprouter.Request) {
 
 func (this *Login) Logout(req *httprouter.Request) {
 	session.Del(req.Header.Get("id"))
-	// s, _ := session.Store.Get(req.Request, "auth")
-	// s.Values["user_id"] = nil
-
-	// s.Save(req.Request, this.ResponseWriter())
 }
 
-func (this *Login) CreateUser(repo *Repo, user *model.User) error {
+func (this *Login) CreateUser(user *model.User) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	return repo.Tx(func(tx *sql.Tx) error {
+	return user.Repo().Tx(func(tx *sql.Tx) error {
+		if err := user.Repo().WithTx(tx).Create(user); err != nil {
+			return err
+		}
+		user.Repo().WithoutTx()
 		theme := model.NewTheme()
 		theme.UserId = user.Id
 		theme.Name = user.Name + "的博客"
-		repo.WithTx(tx).Create(user)
-		var themeRepo *Repo
-		var err error
-		if themeRepo, err = model.NewThemeRepo(); err != nil {
-			return err
-		}
-		themeRepo.WithTx(tx).Create(theme)
-		return nil
+		err := theme.Repo().WithTx(tx).Create(theme)
+		theme.Repo().WithoutTx()
+
+		return err
 	}, ctx, nil)
 }

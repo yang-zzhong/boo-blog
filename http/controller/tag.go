@@ -2,7 +2,6 @@ package controller
 
 import (
 	"boo-blog/model"
-	"database/sql"
 	helpers "github.com/yang-zzhong/go-helpers"
 	httprouter "github.com/yang-zzhong/go-httprouter"
 	. "github.com/yang-zzhong/go-model"
@@ -16,102 +15,64 @@ func (this *Tag) Create(req *httprouter.Request, p *helpers.P) {
 	if name == "" {
 		return
 	}
-	var repo *Repo
-	var err error
-	if repo, err = model.NewTagRepo(); err != nil {
-		this.InternalError(err)
-		return
-	}
-	repo.Where("name", name)
-	if m := repo.One(); m != nil {
-		tag := m.(model.Tag)
-		intro, _ := tag.Intro.Value()
-		introUrl, _ := tag.IntroUrl.Value()
-		this.Json(map[string]interface{}{
-			"name":      tag.Name,
-			"intro":     intro,
-			"intro_url": introUrl,
-		}, 200)
-		return
-	}
 	tag := model.NewTag()
+	tag.Repo().Where("name", name)
+	if m, exist, err := tag.Repo().One(); err != nil {
+		this.InternalError(err)
+	} else if exist {
+		this.Json(m, 200)
+		return
+	}
 	tag.Name = name
-	tag.Intro = sql.NullString{req.FormValue("intro"), false}
-	tag.IntroUrl = sql.NullString{req.FormValue("intro_url"), false}
+	tag.Intro = req.FormValue("intro")
+	tag.IntroUrl = req.FormValue("intro_url")
 	tag.UserId = p.Get("visitor_id").(string)
-	if err = repo.Create(tag); err != nil {
+	if err := tag.Save(); err != nil {
 		this.InternalError(err)
 		return
 	}
-	this.Json(map[string]string{
-		"name":      name,
-		"intro":     req.FormValue("intro"),
-		"intro_url": req.FormValue("intro_url"),
-	}, 200)
+	this.Json(tag, 200)
 }
 
 func (this *Tag) ArticleUsed(req *httprouter.Request, p *helpers.P) {
-	var repo *Repo
-	var err error
-	var models map[string]interface{}
-	if repo, err = model.NewArticleRepo(); err != nil {
+	blog := model.NewBlog()
+	blog.Repo().Where("user_id", p.Get("user_id"))
+	blog.Repo().Select("id", "tags")
+	if models, err := blog.Repo().Fetch(); err != nil {
 		this.InternalError(err)
 		return
-	}
-	repo.Where("user_id", p.Get("user_id"))
-	repo.Select("id", "tags")
-	if models, err = repo.Fetch(); err != nil {
-		this.InternalError(err)
-		return
-	}
-	tags := make(map[string]string)
-	var result []map[string]string
-	for _, m := range models {
-		atl := m.(model.Article)
-		for _, tag := range atl.Tags {
-			tags[tag] = tag
+	} else {
+		tags := make(map[string]string)
+		var result []map[string]string
+		for _, m := range models {
+			for _, tag := range m.(*model.Blog).Tags {
+				tags[tag] = tag
+			}
 		}
-	}
-	for _, tag := range tags {
-		result = append(result, map[string]string{"name": tag})
-	}
+		for _, tag := range tags {
+			result = append(result, map[string]string{"name": tag})
+		}
 
-	this.Json(result, 200)
+		this.Json(result, 200)
+	}
 }
 
 func (this *Tag) Search(req *httprouter.Request) {
-	var repo *Repo
-	var err error
-	var keyword string
-	if repo, err = model.NewTagRepo(); err != nil {
-		this.InternalError(err)
-		return
-	}
-	if keyword = req.FormValue("keyword"); keyword == "" {
+	tag := model.NewTag()
+	if keyword := req.FormValue("keyword"); keyword == "" {
 		this.Json([]string{}, 200)
 		return
+	} else {
+		tag.Repo().Where("title", LIKE, keyword+"%").Limit(10)
 	}
-	repo.Where("title", LIKE, keyword+"%").Limit(10)
-	this.renderRepo(repo)
+	this.renderRepo(tag.Repo())
 }
 
 func (this *Tag) renderRepo(repo *Repo) {
-	var models map[string]interface{}
-	var err error
-	if models, err = repo.Fetch(); err != nil {
+	if models, err := repo.Fetch(); err != nil {
 		this.InternalError(err)
 		return
+	} else {
+		this.Json(models, 200)
 	}
-	result := []map[string]interface{}{}
-	for _, item := range models {
-		tag := item.(model.Tag)
-		intro, _ := tag.Intro.Value()
-		introUrl, _ := tag.IntroUrl.Value()
-		result = append(result, map[string]interface{}{
-			"name":      tag.Name,
-			"intro":     intro,
-			"intro_url": introUrl,
-		})
-	}
-	this.Json(result, 200)
 }

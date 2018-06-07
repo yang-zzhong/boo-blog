@@ -2,7 +2,6 @@ package model
 
 import (
 	"crypto/md5"
-	"database/sql"
 	"encoding/hex"
 	helpers "github.com/yang-zzhong/go-helpers"
 	. "github.com/yang-zzhong/go-model"
@@ -19,18 +18,11 @@ type User struct {
 	Salt        string    `db:"salt char(8)"`
 	CreatedAt   time.Time `db:"created_at datetime"`
 	UpdatedAt   time.Time `db:"updated_at datetime"`
+	*Base
 }
 
 func (user *User) TableName() string {
 	return "user"
-}
-
-func (user *User) PK() string {
-	return "id"
-}
-
-func (user *User) NewId() interface{} {
-	return helpers.RandString(32)
 }
 
 func (user *User) Encrypt(str string) string {
@@ -39,11 +31,23 @@ func (user *User) Encrypt(str string) string {
 }
 
 func NewUser() *User {
-	user := CreateModel(new(User)).(*User)
-	user.Salt = helpers.RandString(8)
+	user := NewModel(new(User)).(*User)
+	user.DeclareMany("blogs", new(Blog), map[string]string{
+		"id": "user_id",
+	})
+	user.DeclareMany("images", new(UserImage), map[string]string{
+		"id": "user_id",
+	})
+	user.DeclareMany("cates", new(Cate), map[string]string{
+		"id": "user_id",
+	})
+	user.DeclareOne("theme", new(Theme), map[string]string{
+		"id": "user_id",
+	})
 	return user
 }
 
-func NewUserRepo() (userRepo *Repo, err error) {
-	return CreateRepo(new(User))
+func (user *User) Instance() *User {
+	user.Salt = helpers.RandString(8)
+	return user
 }
