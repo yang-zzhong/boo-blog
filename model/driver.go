@@ -98,22 +98,12 @@ func nullArrayValue(value interface{}) (result reflect.Value) {
 
 func Instance(m model.Model) interface{} {
 	m.Set(m.PK(), helpers.RandString(32))
-	m.OnCreate(func(m model.Model) {
-		if !m.Has("updated_at") {
-			return
-		}
-		if ca := m.Get("created_at"); ca == nil {
-			m.Set("created_at", time.Now())
-		}
-	})
-	m.OnUpdate(func(m model.Model) {
-		if !m.Has("updated_at") {
-			return
-		}
-		if ua := m.Get("updated_at"); ua == nil {
-			m.Set("updated_at", time.Now())
-		}
-	})
+	if !m.Has("updated_at") {
+		m.Set("created_at", time.Now())
+	}
+	if !m.Has("updated_at") {
+		m.Set("updated_at", time.Now())
+	}
 
 	return m
 }

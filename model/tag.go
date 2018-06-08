@@ -11,12 +11,12 @@ type Tag struct {
 	UserId    string    `db:"user_id char(32)"`
 	IntroUrl  string    `db:"intro_url varchar(512) nil"`
 	CreatedAt time.Time `db:"created_at datetime"`
-	UpdatedAt time.Time `db:"updated_at datetime"`
+	UpdatedAt time.Time `db:"updated_at datetime nil"`
 	*model.Base
 }
 
 func (tag *Tag) TableName() string {
-	return "tags"
+	return "tag"
 }
 
 func NewTag() *Tag {
@@ -26,4 +26,8 @@ func NewTag() *Tag {
 	})
 
 	return tag
+}
+
+func (tag *Tag) Instance() *Tag {
+	return Instance(tag).(*Tag)
 }
