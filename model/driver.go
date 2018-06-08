@@ -8,6 +8,8 @@ import (
 	model "github.com/yang-zzhong/go-model"
 	. "github.com/yang-zzhong/go-querybuilder"
 	"os"
+	"reflect"
+	"strings"
 	"time"
 )
 
@@ -76,6 +78,22 @@ func dsn() string {
 	}
 	dsn += "/" + conf.database + "?parseTime=true"
 	return dsn
+}
+
+func nullArrayDBValue(value interface{}) interface{} {
+	result := strings.Join(value.([]string), ",")
+	return result
+}
+
+func nullArrayValue(value interface{}) (result reflect.Value) {
+	v := value.(sql.NullString)
+	if v.Valid {
+		val, _ := v.Value()
+		result = reflect.ValueOf(strings.Split(val.(string), ","))
+	} else {
+		result = reflect.ValueOf([]string{})
+	}
+	return
 }
 
 func Instance(m model.Model) interface{} {

@@ -1,10 +1,8 @@
 package model
 
 import (
-	"database/sql"
 	model "github.com/yang-zzhong/go-model"
 	"reflect"
-	"strings"
 	"time"
 )
 
@@ -23,26 +21,20 @@ func (ig *Cate) TableName() string {
 	return "category"
 }
 
-func (ig *Cate) DBValue(fieldName string, val interface{}) interface{} {
-	if fieldName == "tags" {
-		return sql.NullString{strings.Join(val.([]string), ","), true}
+func (ig *Cate) DBValue(colname string, value interface{}) interface{} {
+	if colname == "tags" {
+		return nullArrayDBValue(value)
 	}
-	return val
+	return value
 }
 
-func (ig *Cate) Value(fieldName string, val interface{}) (result reflect.Value, catched bool) {
-	if fieldName == "tags" {
-		catched = true
-		v := val.(sql.NullString)
-		if v.Valid {
-			str, _ := v.Value()
-			result = reflect.ValueOf(strings.Split(str.(string), ","))
-		} else {
-			result = reflect.ValueOf([]string{})
-		}
+func (ig *Cate) Value(colname string, value interface{}) (result reflect.Value, catch bool) {
+	if colname == "tags" {
+		catch = true
+		result = nullArrayValue(value)
 		return
 	}
-	catched = false
+	catch = false
 	return
 }
 
