@@ -8,6 +8,8 @@ import (
 	model "github.com/yang-zzhong/go-model"
 	. "github.com/yang-zzhong/go-querybuilder"
 	"os"
+	"reflect"
+	"strings"
 	"time"
 )
 
@@ -78,24 +80,30 @@ func dsn() string {
 	return dsn
 }
 
+func nullArrayDBValue(value interface{}) interface{} {
+	result := strings.Join(value.([]string), ",")
+	return result
+}
+
+func nullArrayValue(value interface{}) (result reflect.Value) {
+	v := value.(sql.NullString)
+	if v.Valid {
+		val, _ := v.Value()
+		result = reflect.ValueOf(strings.Split(val.(string), ","))
+	} else {
+		result = reflect.ValueOf([]string{})
+	}
+	return
+}
+
 func Instance(m model.Model) interface{} {
 	m.Set(m.PK(), helpers.RandString(32))
-	m.OnCreate(func(m model.Model) {
-		if !m.Has("updated_at") {
-			return
-		}
-		if ca := m.Get("created_at"); ca == nil {
-			m.Set("created_at", time.Now())
-		}
-	})
-	m.OnUpdate(func(m model.Model) {
-		if !m.Has("updated_at") {
-			return
-		}
-		if ua := m.Get("updated_at"); ua == nil {
-			m.Set("updated_at", time.Now())
-		}
-	})
+	if !m.Has("updated_at") {
+		m.Set("created_at", time.Now())
+	}
+	if !m.Has("updated_at") {
+		m.Set("updated_at", time.Now())
+	}
 
 	return m
 }

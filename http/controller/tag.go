@@ -15,7 +15,7 @@ func (this *Tag) Create(req *httprouter.Request, p *helpers.P) {
 	if name == "" {
 		return
 	}
-	tag := model.NewTag()
+	tag := model.NewTag().Instance()
 	tag.Repo().Where("title", name)
 	if m, exist, err := tag.Repo().One(); err != nil {
 		this.InternalError(err)
@@ -72,6 +72,10 @@ func (this *Tag) renderRepo(repo *Repo) {
 	if models, err := repo.Fetch(); err != nil {
 		this.InternalError(err)
 	} else {
-		this.Json(models, 200)
+		result := []map[string]interface{}{}
+		for _, m := range models {
+			result = append(result, m.(*model.Tag).Map())
+		}
+		this.Json(result, 200)
 	}
 }

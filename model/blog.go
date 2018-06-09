@@ -28,6 +28,23 @@ func (blog *Blog) TableName() string {
 	return "article"
 }
 
+func (blog *Blog) DBValue(colname string, value interface{}) interface{} {
+	if colname == "tags" {
+		return nullArrayDBValue(value)
+	}
+	return value
+}
+
+func (blog *Blog) Value(colname string, value interface{}) (result reflect.Value, catch bool) {
+	if colname == "tags" {
+		catch = true
+		result = nullArrayValue(value)
+		return
+	}
+	catch = false
+	return
+}
+
 func (blog *Blog) SaveContent(content string) error {
 	log.Print(blog.Pathfile())
 	return ioutil.WriteFile(blog.Pathfile(), []byte(content), 0755)
@@ -90,29 +107,6 @@ func (blog *Blog) WithOverview(content string) {
 func (blog *Blog) Content() string {
 	content, _ := ioutil.ReadFile(blog.Pathfile())
 	return string(content)
-}
-
-func (blog *Blog) DBValue(colname string, value interface{}) interface{} {
-	if colname == "tags" {
-		result := strings.Join(value.([]string), ",")
-		return result
-	}
-	return value
-}
-
-func (blog *Blog) Value(colname string, value interface{}) (result reflect.Value, catched bool) {
-	if colname == "tags" {
-		catched = true
-		val, _ := value.(string)
-		if val != "" {
-			result = reflect.ValueOf(strings.Split(val, ","))
-			return
-		}
-		result = reflect.ValueOf([]string{})
-		return
-	}
-	catched = false
-	return
 }
 
 func NewBlog() *Blog {

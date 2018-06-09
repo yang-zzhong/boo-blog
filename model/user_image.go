@@ -2,6 +2,7 @@ package model
 
 import (
 	. "github.com/yang-zzhong/go-model"
+	"reflect"
 	"time"
 )
 
@@ -18,6 +19,23 @@ type UserImage struct {
 
 func (this *UserImage) TableName() string {
 	return "user_image"
+}
+
+func (this *UserImage) DBValue(colname string, value interface{}) interface{} {
+	if colname == "tags" {
+		return nullArrayDBValue(value)
+	}
+	return value
+}
+
+func (this *UserImage) Value(colname string, value interface{}) (result reflect.Value, catch bool) {
+	if colname == "tags" {
+		catch = true
+		result = nullArrayValue(value)
+		return
+	}
+	catch = false
+	return
 }
 
 func NewUserImage() *UserImage {

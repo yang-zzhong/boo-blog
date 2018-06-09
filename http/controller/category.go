@@ -159,7 +159,7 @@ func (this *Category) renderCates(repo *Repo, idQuantity map[string]int) {
 			c := item.(*model.Cate)
 			var quantity int
 			var ok bool
-			if quantity, ok = idQuantity[cate.Id]; !ok {
+			if quantity, ok = idQuantity[c.Id]; !ok {
 				quantity = 0
 			}
 			result = append(result, map[string]interface{}{
