@@ -16,7 +16,7 @@ type Tag struct {
 }
 
 func (tag *Tag) TableName() string {
-	return "tags"
+	return "tag"
 }
 
 func NewTag() *Tag {

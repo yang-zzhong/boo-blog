@@ -16,7 +16,7 @@ func (this *Tag) Create(req *httprouter.Request, p *helpers.P) {
 		return
 	}
 	tag := model.NewTag()
-	tag.Repo().Where("name", name)
+	tag.Repo().Where("title", name)
 	if m, exist, err := tag.Repo().One(); err != nil {
 		this.InternalError(err)
 	} else if exist {
@@ -71,7 +71,6 @@ func (this *Tag) Search(req *httprouter.Request) {
 func (this *Tag) renderRepo(repo *Repo) {
 	if models, err := repo.Fetch(); err != nil {
 		this.InternalError(err)
-		return
 	} else {
 		this.Json(models, 200)
 	}
