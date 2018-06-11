@@ -22,4 +22,5 @@ func (comment *Comment) Instance() *Comment {
 	comment.DeclareOne("user", new(User), map[string]string{
 		"user_id": "id",
 	})
+	return comment
 }

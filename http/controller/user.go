@@ -25,6 +25,9 @@ func (this *User) One(req *httprouter.Request, p *helpers.P) {
 			return
 		} else {
 			for f, v := range theme.(*model.Theme).Map() {
+				if f == "name" {
+					f = "blog_name"
+				}
 				result[f] = v
 			}
 			this.Json(result, 200)

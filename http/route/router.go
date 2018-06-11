@@ -5,10 +5,16 @@ import (
 	. "github.com/yang-zzhong/go-helpers"
 	httprouter "github.com/yang-zzhong/go-httprouter"
 	"io"
+	"log"
 	. "net/http"
 )
 
 func Router(docRoot string) *httprouter.Router {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Print(r)
+		}
+	}()
 	router := httprouter.NewRouter()
 	router.DocRoot = docRoot
 	router.Before = func(w ResponseWriter, req *httprouter.Request, p *P) bool {
