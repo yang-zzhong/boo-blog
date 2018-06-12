@@ -38,6 +38,7 @@ func (this *Tag) ArticleUsed(req *httprouter.Request, p *helpers.P) {
 	blog := model.NewBlog()
 	blog.Repo().Where("user_id", p.Get("user_id"))
 	blog.Repo().Select("id", "tags")
+	blog.Repo().OrderBy("created_at", "desc")
 	if models, err := blog.Repo().Fetch(); err != nil {
 		this.InternalError(err)
 		return
@@ -50,6 +51,9 @@ func (this *Tag) ArticleUsed(req *httprouter.Request, p *helpers.P) {
 			}
 		}
 		for _, tag := range tags {
+			if tag == "" {
+				continue
+			}
 			result = append(result, map[string]string{"name": tag})
 		}
 
