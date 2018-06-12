@@ -25,8 +25,8 @@ func (this *Login) Register(req *httprouter.Request) {
 		"name":       req.FormValue("name"),
 		"nickname":   req.FormValue("name"),
 		"email_addr": req.FormValue("email_addr"),
-		"password":   user.Encrypt(req.FormValue("password")),
 	})
+	user.Password = user.Encrypt(req.FormValue("password"))
 	user.Repo().Where("name", user.Name)
 	if user.EmailAddr != "" {
 		user.Repo().Or().Where("email_addr", req.FormValue("email_addr"))
