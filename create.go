@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/dmulholland/args"
 	"github.com/go-ini/ini"
-	repo "github.com/yang-zzhong/go-model"
+	model "github.com/yang-zzhong/go-model"
 )
 
 func main() {
@@ -16,35 +16,22 @@ func main() {
 	} else {
 		panic(err)
 	}
-	cateRepo, err := NewCategoryRepo()
-	if err != nil {
-		panic(err)
+	repos := []*model.Repo{
+		NewBlog().Repo(),
+		NewCate().Repo(),
+		NewImage().Repo(),
+		NewTheme().Repo(),
+		NewTag().Repo(),
+		NewUserImage().Repo(),
+		NewUser().Repo(),
 	}
-	imageRepo, err := NewImageRepo()
-	if err != nil {
-		panic(err)
-	}
-	userImageRepo, err := NewUserImageRepo()
-	if err != nil {
-		panic(err)
-	}
-	userRepo, err := NewUserRepo()
-	if err != nil {
-		panic(err)
-	}
-	themeRepo, err := NewThemeRepo()
-	if err != nil {
-		panic(err)
-	}
-	blogRepo, err := NewArticleRepo()
-	if err != nil {
-		panic(err)
-	}
-	tagRepo, err := NewTagRepo()
-	repos := []*repo.Repo{userRepo, cateRepo, imageRepo, userImageRepo, themeRepo, tagRepo, blogRepo}
 	for _, repo := range repos {
-		err := repo.CreateTable()
+		err := repo.CreateRepo()
 		if err != nil {
+			fmt.Println(err)
+		}
+		s := "ALTER TABLE " + repo.QuotedTableName() + " CONVERT TO CHARACTER SET utf8"
+		if _, err := DB.Exec(s); err != nil {
 			fmt.Println(err)
 		}
 	}

@@ -16,7 +16,7 @@ func (this *Category) Find(req *httprouter.Request) {
 	if userId := req.FormValue("user_id"); userId != "" {
 		cate.Repo().Where("user_id", userId)
 	}
-	this.renderCates(cate.Repo(), make(map[string]int))
+	this.renderCates(cate.Repo(), make(map[uint32]int))
 }
 
 func (this *Category) Create(req *httprouter.Request, p *helpers.P) {
@@ -47,10 +47,10 @@ func (this *Category) ImageUsed(req *httprouter.Request, p *helpers.P) {
 		Select("cate_id", E{"count(1) as quantity"}).
 		GroupBy("cate_id")
 	var cateIds []interface{}
-	idCount := make(map[string]int)
+	idCount := make(map[uint32]int)
 	var err error
 	image.Repo().Query(func(rows *sql.Rows, _ []string) {
-		var id string
+		var id uint32
 		var quantity int
 		if err = rows.Scan(&id, &quantity); err != nil {
 			return
@@ -76,10 +76,10 @@ func (this *Category) ArticleUsed(req *httprouter.Request, p *helpers.P) {
 		Select("cate_id", E{"count(1) as quantity"}).
 		GroupBy("cate_id")
 	var cateIds []interface{}
-	idCount := make(map[string]int)
+	idCount := make(map[uint32]int)
 	var err error
 	blog.Repo().Query(func(rows *sql.Rows, _ []string) {
-		var id string
+		var id uint32
 		var quantity int
 		if err = rows.Scan(&id, &quantity); err != nil {
 			return
@@ -148,7 +148,7 @@ func (this *Category) Delete(req *httprouter.Request, p *helpers.P) {
 	}
 }
 
-func (this *Category) renderCates(repo *Repo, idQuantity map[string]int) {
+func (this *Category) renderCates(repo *Repo, idQuantity map[uint32]int) {
 	var result []map[string]interface{}
 	cate := model.NewCate()
 	cate.Repo().OrderBy("created_at", DESC)

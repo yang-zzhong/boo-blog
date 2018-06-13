@@ -79,7 +79,7 @@ func (this *Article) Create(req *httprouter.Request, p *helpers.P) {
 		"title":   req.FormValue("title"),
 		"user_id": p.Get("visitor_id"),
 		"tags":    req.FormSlice("tags"),
-		"cate_id": req.FormValue("cate_id"),
+		"cate_id": uint32(req.FormInt("cate_id")),
 	})
 	blog.WithUrlId().WithOverview(req.FormValue("content"))
 	blog.Repo().Where("user_id", blog.UserId).Quote(func(repo *Builder) {
@@ -119,7 +119,7 @@ func (this *Article) Update(req *httprouter.Request, p *helpers.P) {
 	} else {
 		blog = m.(*model.Blog)
 	}
-	if blog.UserId != p.Get("visitor_id").(string) {
+	if blog.UserId != p.Get("visitor_id").(uint32) {
 		this.String("你没有权限修改别人的文章", 500)
 		return
 	}
@@ -145,7 +145,7 @@ func (this *Article) Remove(req *httprouter.Request, p *helpers.P) {
 	} else {
 		blog = m.(*model.Blog)
 	}
-	if blog.UserId != p.Get("visitor_id").(string) {
+	if blog.UserId != p.Get("visitor_id").(uint32) {
 		this.String("你没有权限修改别人的文章", 500)
 		return
 	}

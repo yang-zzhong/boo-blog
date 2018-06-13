@@ -6,6 +6,7 @@ import (
 	httprouter "github.com/yang-zzhong/go-httprouter"
 	. "github.com/yang-zzhong/go-model"
 	. "github.com/yang-zzhong/go-querybuilder"
+	"log"
 )
 
 type Tag struct{ *Controller }
@@ -16,7 +17,7 @@ func (this *Tag) Create(req *httprouter.Request, p *helpers.P) {
 		return
 	}
 	tag := model.NewTag().Instance()
-	tag.Repo().Where("title", name)
+	tag.Repo().Where("name", name)
 	if m, exist, err := tag.Repo().One(); err != nil {
 		this.InternalError(err)
 	} else if exist {
@@ -26,7 +27,7 @@ func (this *Tag) Create(req *httprouter.Request, p *helpers.P) {
 	tag.Name = name
 	tag.Intro = req.FormValue("intro")
 	tag.IntroUrl = req.FormValue("intro_url")
-	tag.UserId = p.Get("visitor_id").(string)
+	tag.UserId = p.Get("visitor_id").(uint32)
 	if err := tag.Save(); err != nil {
 		this.InternalError(err)
 		return
@@ -43,18 +44,15 @@ func (this *Tag) ArticleUsed(req *httprouter.Request, p *helpers.P) {
 		this.InternalError(err)
 		return
 	} else {
-		tags := make(map[string]string)
 		var result []map[string]string
 		for _, m := range models {
+			log.Print(m)
 			for _, tag := range m.(*model.Blog).Tags {
-				tags[tag] = tag
+				if tag == "" {
+					continue
+				}
+				result = append(result, map[string]string{"name": tag})
 			}
-		}
-		for _, tag := range tags {
-			if tag == "" {
-				continue
-			}
-			result = append(result, map[string]string{"name": tag})
 		}
 
 		this.Json(result, 200)
@@ -67,7 +65,7 @@ func (this *Tag) Search(req *httprouter.Request) {
 		this.Json([]string{}, 200)
 		return
 	} else {
-		tag.Repo().Where("title", LIKE, keyword+"%").Limit(10)
+		tag.Repo().Where("name", LIKE, keyword+"%").Limit(10)
 	}
 	this.renderRepo(tag.Repo())
 }

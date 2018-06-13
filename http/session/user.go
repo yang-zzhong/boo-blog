@@ -4,6 +4,7 @@ import (
 	"boo-blog/model"
 	"crypto/md5"
 	"encoding/hex"
+	"strconv"
 )
 
 var users map[string]*model.User
@@ -18,8 +19,8 @@ func Save(user *model.User) string {
 	return id
 }
 
-func Id(userId string) string {
-	md5Sum := md5.Sum([]byte(userId))
+func Id(userId uint32) string {
+	md5Sum := md5.Sum([]byte(strconv.FormatUint(uint64(userId), 32)))
 
 	return hex.EncodeToString(md5Sum[:])
 }

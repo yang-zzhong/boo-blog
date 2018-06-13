@@ -3,13 +3,14 @@ package model
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"github.com/google/uuid"
 	helpers "github.com/yang-zzhong/go-helpers"
 	. "github.com/yang-zzhong/go-model"
 	"time"
 )
 
 type User struct {
-	Id          string    `db:"id char(32) pk"`
+	Id          uint32    `db:"id bigint pk"`
 	Name        string    `db:"name varchar(128) uk"`
 	NickName    string    `db:"nickname varchar(128) nil"`
 	EmailAddr   string    `db:"email_addr varchar(128) nil"`
@@ -22,7 +23,7 @@ type User struct {
 }
 
 func (user *User) TableName() string {
-	return "user"
+	return "users"
 }
 
 func (user *User) Encrypt(str string) string {
@@ -49,5 +50,8 @@ func NewUser() *User {
 
 func (user *User) Instance() *User {
 	user.Salt = helpers.RandString(8)
+	user.Id = uuid.New().ID()
+	user.CreatedAt = time.Now()
+	user.UpdatedAt = time.Now()
 	return user
 }

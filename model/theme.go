@@ -5,7 +5,7 @@ import (
 )
 
 type Theme struct {
-	UserId        string `db:"user_id char(32) pk"`
+	UserId        uint32 `db:"user_id bigint pk"`
 	Name          string `db:"name varchar(128) uk"`
 	BgImageId     string `db:"bg_image_id char(32) nil"`
 	InfoBgImageId string `db:"info_bg_image_id char(32) nil"`

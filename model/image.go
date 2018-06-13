@@ -36,7 +36,7 @@ type Image struct {
 }
 
 func (image *Image) TableName() string {
-	return "image"
+	return "images"
 }
 
 func (image *Image) Pathfile() string {
@@ -147,5 +147,11 @@ func NewImage() *Image {
 		"hash": "hash",
 	})
 
+	return image
+}
+
+func (image *Image) Instance() *Image {
+	image.CreatedAt = time.Now()
+	image.UpdatedAt = time.Now()
 	return image
 }

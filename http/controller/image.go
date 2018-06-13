@@ -49,7 +49,7 @@ func (this *Image) Create(req *httprouter.Request, p *helpers.P) {
 		return
 	}
 	defer src.Close()
-	image := model.NewImage()
+	image := model.NewImage().Instance()
 	err = image.FillWithMultipart(src, header)
 	if err != nil {
 		this.InternalError(err)
@@ -76,7 +76,7 @@ func (this *Image) Create(req *httprouter.Request, p *helpers.P) {
 			return
 		}
 	}
-	userImage := model.NewUserImage()
+	userImage := model.NewUserImage().Instance()
 	userImage.Repo().Where("user_id", p.Get("visitor_id")).Where("hash", image.Hash)
 	if m, exist, err := userImage.Repo().One(); err != nil {
 		this.InternalError(err)
@@ -85,13 +85,13 @@ func (this *Image) Create(req *httprouter.Request, p *helpers.P) {
 		userImage = m.(*model.UserImage)
 
 	}
-	userImage.UserId = p.Get("visitor_id").(string)
+	userImage.UserId = p.Get("visitor_id").(uint32)
 	userImage.Hash = image.Hash
 	if err = userImage.Save(); err != nil {
 		this.InternalError(err)
 		return
 	}
-	this.Json(map[string]string{
+	this.Json(map[string]interface{}{
 		"user_image_id": userImage.Id,
 		"name":          image.Name,
 		"image_id":      image.Hash,

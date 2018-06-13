@@ -1,16 +1,17 @@
 package model
 
 import (
+	"github.com/google/uuid"
 	model "github.com/yang-zzhong/go-model"
 	"reflect"
 	"time"
 )
 
 type Cate struct {
-	Id        string    `db:"id char(36) pk"`
+	Id        uint32    `db:"id bigint pk"`
 	Name      string    `db:"name varchar(64)"`
 	Intro     string    `db:"intro varchar(512) nil"`
-	UserId    string    `db:"user_id char(36)"`
+	UserId    uint32    `db:"user_id bigint"`
 	Tags      []string  `db:"tags varchar(512) nil"`
 	CreatedAt time.Time `db:"created_at datetime"`
 	UpdatedAt time.Time `db:"updated_at datetime"`
@@ -18,7 +19,7 @@ type Cate struct {
 }
 
 func (ig *Cate) TableName() string {
-	return "category"
+	return "cates"
 }
 
 func (ig *Cate) DBValue(colname string, value interface{}) interface{} {
@@ -51,5 +52,9 @@ func NewCate() *Cate {
 }
 
 func (ig *Cate) Instance() *Cate {
-	return Instance(ig).(*Cate)
+	ig.Id = uuid.New().ID()
+	ig.CreatedAt = time.Now()
+	ig.UpdatedAt = time.Now()
+
+	return ig
 }

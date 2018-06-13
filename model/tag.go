@@ -6,9 +6,9 @@ import (
 )
 
 type Tag struct {
-	Name      string    `db:"title varchar(64) pk"`
+	Name      string    `db:"name varchar(64) pk"`
 	Intro     string    `db:"intro varchar(256) nil"`
-	UserId    string    `db:"user_id char(32)"`
+	UserId    uint32    `db:"user_id bigint"`
 	IntroUrl  string    `db:"intro_url varchar(512) nil"`
 	CreatedAt time.Time `db:"created_at datetime"`
 	UpdatedAt time.Time `db:"updated_at datetime nil"`
@@ -16,7 +16,7 @@ type Tag struct {
 }
 
 func (tag *Tag) TableName() string {
-	return "tag"
+	return "tags"
 }
 
 func NewTag() *Tag {
@@ -29,5 +29,8 @@ func NewTag() *Tag {
 }
 
 func (tag *Tag) Instance() *Tag {
-	return Instance(tag).(*Tag)
+	tag.CreatedAt = time.Now()
+	tag.UpdatedAt = time.Now()
+
+	return tag
 }

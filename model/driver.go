@@ -4,13 +4,11 @@ import (
 	"database/sql"
 	"github.com/go-ini/ini"
 	_ "github.com/go-sql-driver/mysql"
-	helpers "github.com/yang-zzhong/go-helpers"
 	model "github.com/yang-zzhong/go-model"
 	. "github.com/yang-zzhong/go-querybuilder"
 	"os"
 	"reflect"
 	"strings"
-	"time"
 )
 
 type IdMaker interface {
@@ -29,6 +27,7 @@ type config struct {
 }
 
 var conf config
+var DB *sql.DB
 
 func InitDriver(config *ini.Section) {
 	conf.driver = config.Key("driver").String()
@@ -43,6 +42,7 @@ func InitDriver(config *ini.Section) {
 		panic(err)
 	} else {
 		model.Config(conn, &MysqlModifier{})
+		DB = conn
 	}
 	sureDir(conf.image_dir)
 	sureDir(conf.blog_dir)
@@ -94,16 +94,4 @@ func nullArrayValue(value interface{}) (result reflect.Value) {
 		result = reflect.ValueOf([]string{})
 	}
 	return
-}
-
-func Instance(m model.Model) interface{} {
-	m.Set(m.PK(), helpers.RandString(32))
-	if m.Has("updated_at") {
-		m.Set("created_at", time.Now())
-	}
-	if m.Has("updated_at") {
-		m.Set("updated_at", time.Now())
-	}
-
-	return m
 }
