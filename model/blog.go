@@ -87,31 +87,40 @@ func (blog *Blog) WithOverview(content string) {
 		return false
 	}
 	overview := ""
-	find(node, func(n *html.Node) bool {
-		found := false
-		for _, attr := range n.Attr {
-			if attr.Key == "class" && attr.Val == "overview" {
-				found = true
-				break
-			}
+	find(node, func(d *html.Node) bool {
+		if d.Type == html.TextNode {
+			overview += d.Data
 		}
-		if found {
-			if n.Type == html.TextNode {
-				overview += n.Data
-			}
-			find(n.FirstChild, func(d *html.Node) bool {
-				if d.Type == html.TextNode {
-					overview += d.Data
-				}
-				if len(overview) > 512 {
-					return true
-				}
-				return false
-			})
+		if len(overview) > 512 {
 			return true
 		}
 		return false
 	})
+	// find(node, func(n *html.Node) bool {
+	// 	found := false
+	// 	for _, attr := range n.Attr {
+	// 		if attr.Key == "class" && attr.Val == "overview" {
+	// 			found = true
+	// 			break
+	// 		}
+	// 	}
+	// 	if found {
+	// 		if n.Type == html.TextNode {
+	// 			overview += n.Data
+	// 		}
+	// 		find(n.FirstChild, func(d *html.Node) bool {
+	// 			if d.Type == html.TextNode {
+	// 				overview += d.Data
+	// 			}
+	// 			if len(overview) > 512 {
+	// 				return true
+	// 			}
+	// 			return false
+	// 		})
+	// 		return true
+	// 	}
+	// 	return false
+	// })
 	blog.Overview = overview
 }
 
