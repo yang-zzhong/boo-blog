@@ -5,25 +5,42 @@ import (
 	helpers "github.com/yang-zzhong/go-helpers"
 	httprouter "github.com/yang-zzhong/go-httprouter"
 	. "github.com/yang-zzhong/go-querybuilder"
+	"log"
 )
 
 type Theme struct{ *Controller }
 
 func (this *Theme) Find(p *helpers.P) {
-
+	theme := model.NewTheme()
+	theme.Repo().Where("user_id", p.Get("visitor_id"))
+	if res, err := theme.Repo().Fetch(); err != nil {
+		this.InternalError(err)
+	} else {
+		result := []*model.Theme{}
+		for _, item := range res {
+			result = append(result, item.(*model.Theme))
+		}
+		this.Json(result, 200)
+	}
 }
 
 func (this *Theme) Create(req *httprouter.Request, p *helpers.P) {
 	theme := model.NewTheme().Instance()
 	theme.Fill(map[string]interface{}{
+		"user_id": p.Get("visitor_id"),
 		"name":    req.FormValue("name"),
 		"content": req.FormMap("content"),
 	})
+	log.Print("name", req.FormValue("name"))
+	log.Print("content", req.FormMap("content"))
+	log.Print(theme)
+	log.Print("theme name", theme.Name)
 	theme.Repo().Where("name", theme.Name).Where("user_id", p.Get("visitor_id"))
 	if exists, err := theme.Repo().Count(); err != nil {
 		this.InternalError(err)
 	} else if exists != 0 {
 		this.String("该主题已存在", 500)
+		return
 	}
 	if err := theme.Save(); err != nil {
 		this.InternalError(err)

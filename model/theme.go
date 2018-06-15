@@ -1,7 +1,6 @@
 package model
 
 import (
-	"database/sql"
 	"encoding/json"
 	"github.com/google/uuid"
 	model "github.com/yang-zzhong/go-model"
@@ -10,11 +9,11 @@ import (
 )
 
 type Theme struct {
-	Id        uint32                 `db:"id bigint pk"`
-	UserId    uint32                 `db:"user_id bigint"`
-	Name      string                 `db:"name varchar(128)"`
-	Content   map[string]interface{} `db:"content longtext"`
-	CreatedAt time.Time              `db:"created_at datetime"`
+	Id        uint32            `db:"id bigint pk"`
+	UserId    uint32            `db:"user_id bigint"`
+	Name      string            `db:"name varchar(128)"`
+	Content   map[string]string `db:"content longtext"`
+	CreatedAt time.Time         `db:"created_at datetime"`
 	*model.Base
 }
 
@@ -25,15 +24,10 @@ func (this *Theme) TableName() string {
 func (this *Theme) Value(colname string, value interface{}) (result reflect.Value, catch bool) {
 	if colname == "content" {
 		catch = true
-		v := value.(sql.NullString)
-		if v.Valid {
-			val, _ := v.Value()
-			var res []byte
-			json.Unmarshal(val.([]byte), &res)
-			result = reflect.ValueOf(string(res))
-		} else {
-			result = reflect.ValueOf(make(map[string]interface{}))
-		}
+		val := value.(string)
+		var res map[string]string
+		json.Unmarshal([]byte(val), &res)
+		result = reflect.ValueOf(res)
 	}
 
 	return
