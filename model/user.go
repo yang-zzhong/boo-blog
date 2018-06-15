@@ -6,7 +6,6 @@ import (
 	"github.com/google/uuid"
 	helpers "github.com/yang-zzhong/go-helpers"
 	model "github.com/yang-zzhong/go-model"
-	"log"
 	"time"
 )
 
@@ -17,6 +16,7 @@ type User struct {
 	EmailAddr       string    `db:"email_addr varchar(128) nil"`
 	PhoneNumber     string    `db:"phone_number varchar(128) nil"`
 	PortraitImageId string    `db:"portrait_image_id varchar(32) nil"`
+	ThemeId         uint32    `db:"theme_id bigint nil"`
 	Password        string    `db:"password varchar(128) protected"`
 	Salt            string    `db:"salt char(8) protected"`
 	CreatedAt       time.Time `db:"created_at datetime"`
@@ -31,9 +31,6 @@ func (user *User) TableName() string {
 func (user *User) Encrypt(str string) string {
 	md5Sumb := md5.Sum(([]byte)(str + user.Salt))
 	result := hex.EncodeToString(md5Sumb[:])
-	log.Printf("salt: %s", user.Salt)
-	log.Printf("password: %s", str)
-	log.Printf("result: %s", result)
 	return result
 }
 
@@ -48,8 +45,15 @@ func NewUser() *User {
 	user.DeclareMany("cates", new(Cate), map[string]string{
 		"id": "user_id",
 	})
-	user.DeclareOne("theme", new(Theme), map[string]string{
+	user.DeclareOne("current_theme", new(Theme), map[string]string{
+		"theme_id": "id",
+	})
+	user.DeclareMany("themes", new(Theme), map[string]string{
 		"id": "user_id",
+	})
+	user.OnUpdate(func(u interface{}) error {
+		u.(*User).UpdatedAt = time.Now()
+		return nil
 	})
 	return user
 }

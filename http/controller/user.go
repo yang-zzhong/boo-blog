@@ -10,7 +10,7 @@ type User struct{ *Controller }
 
 func (this *User) One(req *httprouter.Request, p *helpers.P) {
 	user := model.NewUser()
-	user.Repo().With("theme").Where("name", p.Get("name"))
+	user.Repo().With("current_theme").Where("name", p.Get("name"))
 	if m, exist, err := user.Repo().One(); err != nil {
 		this.InternalError(err)
 		return
@@ -20,18 +20,13 @@ func (this *User) One(req *httprouter.Request, p *helpers.P) {
 	} else {
 		user = m.(*model.User)
 		result := user.Map()
-		if theme, err := m.(*model.User).One("theme"); err != nil {
+		if theme, err := m.(*model.User).One("current_theme"); err != nil {
 			this.InternalError(err)
 			return
 		} else if theme == nil {
 			this.Json(result, 200)
 		} else {
-			for f, v := range theme.(*model.Theme).Map() {
-				if f == "name" {
-					f = "blog_name"
-				}
-				result[f] = v
-			}
+			result["theme"] = theme.(*model.Theme).Content
 			this.Json(result, 200)
 		}
 	}

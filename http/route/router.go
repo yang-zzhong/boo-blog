@@ -37,6 +37,7 @@ func registerNeedAuthRoute(router *httprouter.Router) {
 	registerBlogInfoRoutes(router)
 	registerTagAuthRoutes(router)
 	registerCateAuthRoutes(router)
+	registerThemeAuthRoutes(router)
 }
 
 func registerPublicRoute(router *httprouter.Router) {

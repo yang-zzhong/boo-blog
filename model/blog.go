@@ -126,6 +126,10 @@ func NewBlog() *Blog {
 	blog.DeclareOne("cate", new(Cate), map[string]string{
 		"cate_id": "id",
 	})
+	blog.OnUpdate(func(b interface{}) error {
+		b.(*Blog).UpdatedAt = time.Now()
+		return nil
+	})
 
 	return blog
 }
