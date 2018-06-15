@@ -69,27 +69,12 @@ func (blog *Blog) GetUrlId(title string) string {
 func (blog *Blog) WithOverview(content string) {
 	reader := strings.NewReader(content)
 	node, _ := html.Parse(reader)
-	type callback func(n *html.Node) bool
-	var find func(n *html.Node, call callback) bool
-	var depth = 0
-	find = func(n *html.Node, call callback) bool {
-		if call(n) || depth > 100 {
+	nodes := 0
+	find(node, func(d *html.Node) bool {
+		if nodes > 300 {
 			return true
 		}
-		depth++
-		for c := n.FirstChild; c != nil; c = c.FirstChild {
-			if find(c, call) {
-				return true
-			}
-		}
-		for c := n.NextSibling; c != nil; c = c.NextSibling {
-			if find(c, call) {
-				return true
-			}
-		}
-		return false
-	}
-	find(node, func(d *html.Node) bool {
+		nodes++
 		if d.Type == html.ElementNode && d.Data == "img" {
 			for _, attr := range d.Attr {
 				if attr.Key == "src" {
@@ -105,7 +90,12 @@ func (blog *Blog) WithOverview(content string) {
 	if blog.Image != "" {
 		limit = 256
 	}
+	nodes = 0
 	find(node, func(d *html.Node) bool {
+		if nodes > 300 {
+			return true
+		}
+		nodes++
 		if d.Type == html.TextNode {
 			blog.Overview += d.Data
 		}
@@ -138,4 +128,23 @@ func (blog *Blog) Instance() *Blog {
 	blog.CreatedAt = time.Now()
 	blog.UpdatedAt = time.Now()
 	return blog
+}
+
+type callback func(n *html.Node) bool
+
+func find(n *html.Node, call callback) bool {
+	if call(n) {
+		return true
+	}
+	for c := n.FirstChild; c != nil; c = c.FirstChild {
+		if find(c, call) {
+			return true
+		}
+	}
+	for c := n.NextSibling; c != nil; c = c.NextSibling {
+		if find(c, call) {
+			return true
+		}
+	}
+	return false
 }
