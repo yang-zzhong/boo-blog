@@ -29,6 +29,13 @@ func registerImageAuthRoutes(router *httprouter.Router) {
 	})
 }
 
+func registerBlogInfoRoutes(router *httprouter.Router) {
+	router.Post("/blog-info", func(w ResponseWriter, req *httprouter.Request, p *P) {
+		user := &controller.User{controller.NewController(w)}
+		user.SaveBlogInfo(req, p)
+	})
+}
+
 func registerTagAuthRoutes(router *httprouter.Router) {
 	router.Post("/tags", func(w ResponseWriter, req *httprouter.Request, p *P) {
 		tag := &controller.Tag{controller.NewController(w)}
