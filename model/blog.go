@@ -16,6 +16,7 @@ type Blog struct {
 	Id        uint32    `db:"id bigint pk"`
 	Title     string    `db:"title varchar(256)"`
 	Overview  string    `db:"overview text"`
+	Image     string    `db:"image varchar(1024)"`
 	UrlId     string    `db:"url_id varchar(256)"`
 	UserId    uint32    `db:"user_id bigint"`
 	CateId    uint32    `db:"cate_id bigint nil"`
@@ -62,7 +63,7 @@ func (blog *Blog) WithUrlId() *Blog {
 
 func (blog *Blog) GetUrlId(title string) string {
 	reg, _ := regexp.Compile("\\s|\\?|\\&|\"|'")
-	return reg.ReplaceAllString(title, "_")
+	return reg.ReplaceAllString(title, "-")
 }
 
 func (blog *Blog) WithOverview(content string) {
@@ -70,10 +71,12 @@ func (blog *Blog) WithOverview(content string) {
 	node, _ := html.Parse(reader)
 	type callback func(n *html.Node) bool
 	var find func(n *html.Node, call callback) bool
+	var depth = 0
 	find = func(n *html.Node, call callback) bool {
-		if call(n) {
+		if call(n) || depth > 100 {
 			return true
 		}
+		depth++
 		for c := n.FirstChild; c != nil; c = c.FirstChild {
 			if find(c, call) {
 				return true
@@ -86,42 +89,31 @@ func (blog *Blog) WithOverview(content string) {
 		}
 		return false
 	}
-	overview := ""
+	find(node, func(d *html.Node) bool {
+		if d.Type == html.ElementNode && d.Data == "img" {
+			for _, attr := range d.Attr {
+				if attr.Key == "src" {
+					blog.Image = attr.Val
+					return true
+				}
+			}
+		}
+		return false
+	})
+	blog.Overview = ""
+	limit := 512
+	if blog.Image != "" {
+		limit = 256
+	}
 	find(node, func(d *html.Node) bool {
 		if d.Type == html.TextNode {
-			overview += d.Data
+			blog.Overview += d.Data
 		}
-		if len(overview) > 512 {
+		if len(blog.Overview) > limit {
 			return true
 		}
 		return false
 	})
-	// find(node, func(n *html.Node) bool {
-	// 	found := false
-	// 	for _, attr := range n.Attr {
-	// 		if attr.Key == "class" && attr.Val == "overview" {
-	// 			found = true
-	// 			break
-	// 		}
-	// 	}
-	// 	if found {
-	// 		if n.Type == html.TextNode {
-	// 			overview += n.Data
-	// 		}
-	// 		find(n.FirstChild, func(d *html.Node) bool {
-	// 			if d.Type == html.TextNode {
-	// 				overview += d.Data
-	// 			}
-	// 			if len(overview) > 512 {
-	// 				return true
-	// 			}
-	// 			return false
-	// 		})
-	// 		return true
-	// 	}
-	// 	return false
-	// })
-	blog.Overview = overview
 }
 
 func (blog *Blog) Content() string {
