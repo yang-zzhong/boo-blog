@@ -37,19 +37,20 @@ func (this *User) One(req *httprouter.Request, p *helpers.P) {
 
 func (this *User) SaveBlogInfo(req *httprouter.Request, p *helpers.P) {
 	theme := model.NewTheme()
-	if m, exist, err := theme.Repo().Find(p.Get("user_id")); err != nil {
+	if m, exist, err := theme.Repo().Find(p.Get("visitor_id")); err != nil {
 		this.InternalError(err)
 	} else if !exist {
 		this.String("没有找到主题", 404)
 	} else {
 		theme = m.(*model.Theme)
-		theme.Fill(map[string]interface{}{
+		data := map[string]interface{}{
 			"bg_image_id":   req.FormValue("bg_image_id"),
 			"name":          req.FormValue("blog_name"),
 			"bg_color":      req.FormValue("bg_color"),
 			"info_bg_color": req.FormValue("info_bg_color"),
 			"name_color":    req.FormValue("name_color"),
-		})
+		}
+		theme.Fill(data)
 		if err := theme.Save(); err != nil {
 			this.InternalError(err)
 		}
