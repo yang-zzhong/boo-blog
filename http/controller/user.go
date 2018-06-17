@@ -42,6 +42,9 @@ func (this *User) SaveUserInfo(req *httprouter.Request, p *helpers.P) {
 	} else {
 		user = m.(*model.User)
 	}
+	if req.FormValue("bio") != "" {
+		user.Bio = req.FormValue("bio")
+	}
 	if req.FormValue("portrait_image_id") != "" {
 		user.PortraitImageId = req.FormValue("portrait_image_id")
 	}

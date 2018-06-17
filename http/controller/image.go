@@ -2,12 +2,16 @@ package controller
 
 import (
 	"boo-blog/model"
+	"database/sql"
 	"github.com/nfnt/resize"
 	helpers "github.com/yang-zzhong/go-helpers"
 	httprouter "github.com/yang-zzhong/go-httprouter"
+	m "github.com/yang-zzhong/go-model"
 	"io"
+	"log"
 	. "net/http"
 	"os"
+	"strconv"
 )
 
 type Image struct{ *Controller }
@@ -31,8 +35,8 @@ func (this *Image) Find(req *httprouter.Request) {
 		this.InternalError(err)
 	} else {
 		var result []map[string]interface{}
-		for _, m := range userImages {
-			image := m.(*model.UserImage)
+		for _, entity := range userImages {
+			image := entity.(*model.UserImage)
 			result = append(result, map[string]interface{}{
 				"image_id": image.Hash,
 				"user_id":  image.UserId,
@@ -78,12 +82,11 @@ func (this *Image) Create(req *httprouter.Request, p *helpers.P) {
 	}
 	userImage := model.NewUserImage().Instance()
 	userImage.Repo().Where("user_id", p.Get("visitor_id")).Where("hash", image.Hash)
-	if m, exist, err := userImage.Repo().One(); err != nil {
+	if entity, exist, err := userImage.Repo().One(); err != nil {
 		this.InternalError(err)
 		return
 	} else if exist {
-		userImage = m.(*model.UserImage)
-
+		userImage = entity.(*model.UserImage)
 	}
 	userImage.UserId = p.Get("visitor_id").(uint32)
 	userImage.Hash = image.Hash
@@ -125,49 +128,52 @@ func (this *Image) Get(req *httprouter.Request, p *helpers.P) {
 }
 
 func (image *Image) MoveTo(req *httprouter.Request, p *helpers.P) {
-	// var imageRepo *Repo
-	// var groupRepo *Repo
-	// var image_ids []string
-	// var err error
-	// image_ids = req.FormSlice("image_ids")
-	// if len(image_ids) == 0 {
-	// 	return
-	// }
-	// if groupRepo, err = model.NewCategoryRepo(); err != nil {
-	// 	image.InternalError(err)
-	// 	return
-	// }
-	// var m interface{}
-	// if m = groupRepo.Find(req.FormValue("group_id")); m == nil {
-	// 	image.InternalError(err)
-	// 	return
-	// }
-	// if group := m.(*model.Category); group.UserId != p.Get("visitor").(*model.User).Id {
-	// 	image.String("你没有权限移动图片到其他人的分类", 405)
-	// 	return
-	// }
-	// if imageRepo, err = model.NewUserImageRepo(); err != nil {
-	// 	image.InternalError(err)
-	// 	return
-	// }
-	// imageRepo.WhereIn("id", image_ids)
-	// images, _ := imageRepo.Fetch()
-	// ctx, cancel := context.WithCancel(context.Background())
-	// defer cancel()
-	// err = imageRepo.Tx(func(tx *sql.Tx) error {
-	// 	for _, item := range images {
-	// 		image := item.(model.UserImage)
-	// 		if image.UserId != p.Get("visitor").(*model.User).Id {
-	// 			return errors.New("你没有权限移动别人的图片")
-	// 		}
-	// 		image.GroupId = req.FormValue("group_id")
-	// 		if err = imageRepo.WithTx(tx).Update(image); err != nil {
-	// 			return err
-	// 		}
-	// 	}
-	// 	return nil
-	// }, ctx, nil)
-	// if err != nil {
-	// 	image.InternalError(err)
-	// }
+	cate := model.NewCate()
+	userImage := model.NewUserImage()
+	ids := req.FormSlice("image_ids")
+	log.Print("image_ids", req.FormValue("image_ids"))
+	log.Print("ids", ids)
+	if len(ids) == 0 {
+		return
+	}
+	image_ids := []interface{}{}
+	for _, id := range ids {
+		image_ids = append(image_ids, id)
+	}
+	if entity, ok, err := cate.Repo().Find(p.Get("cate_id")); err != nil {
+		image.InternalError(err)
+		return
+	} else if !ok {
+		image.String("分类不存在", 500)
+		return
+	} else {
+		cate = entity.(*model.Cate)
+	}
+	if cate.UserId != p.Get("visitor_id") {
+		image.String("你不能移动图片到别人的分类", 500)
+		return
+	}
+	userImage.Repo().
+		WhereIn("id", image_ids).
+		Where("user_id", p.Get("visitor_id"))
+	if r, err := userImage.Repo().Fetch(); err != nil {
+		image.InternalError(err)
+		return
+	} else {
+		log.Print(r)
+		err := m.Conn.Tx(func(tx *sql.Tx) error {
+			for _, entity := range r {
+				userImage = entity.(*model.UserImage)
+				cateId, _ := strconv.ParseUint(p.Get("cate_id").(string), 10, 32)
+				userImage.CateId = uint32(cateId)
+				if err := userImage.Repo().WithTx(tx).Update(userImage); err != nil {
+					return err
+				}
+			}
+			return nil
+		}, nil, nil)
+		if err != nil {
+			image.InternalError(err)
+		}
+	}
 }

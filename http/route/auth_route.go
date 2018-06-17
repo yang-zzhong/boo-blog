@@ -54,6 +54,10 @@ func registerImageAuthRoutes(router *httprouter.Router) {
 		image := &controller.Image{controller.NewController(w)}
 		image.Create(req, p)
 	})
+	router.Put("/images/to/:cate_id", func(w ResponseWriter, req *httprouter.Request, p *P) {
+		image := &controller.Image{controller.NewController(w)}
+		image.MoveTo(req, p)
+	})
 }
 
 func registerBlogInfoRoutes(router *httprouter.Router) {

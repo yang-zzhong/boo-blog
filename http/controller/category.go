@@ -41,7 +41,7 @@ func (this *Category) Create(req *httprouter.Request, p *helpers.P) {
 }
 
 func (this *Category) ImageUsed(req *httprouter.Request, p *helpers.P) {
-	image := model.NewImage()
+	image := model.NewUserImage()
 	cate := model.NewCate()
 	image.Repo().Where("user_id", p.Get("user_id")).
 		Select("cate_id", E{"count(1) as quantity"}).
