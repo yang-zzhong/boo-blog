@@ -149,26 +149,19 @@ func (this *Category) Delete(req *httprouter.Request, p *helpers.P) {
 }
 
 func (this *Category) renderCates(repo *Repo, idQuantity map[uint32]int) {
-	var result []map[string]interface{}
 	cate := model.NewCate()
-	cate.Repo().OrderBy("created_at", DESC)
 	if data, err := cate.Repo().Fetch(); err != nil {
 		this.InternalError(err)
 	} else {
+		var result []map[string]interface{}
 		for _, item := range data {
-			c := item.(*model.Cate)
-			var quantity int
-			var ok bool
-			if quantity, ok = idQuantity[c.Id]; !ok {
-				quantity = 0
+			c := item.(*model.Cate).Map()
+			if quantity, ok := idQuantity[c["id"].(uint32)]; ok {
+				c["quantity"] = quantity
+			} else {
+				c["quantity"] = 0
 			}
-			result = append(result, map[string]interface{}{
-				"id":       c.Id,
-				"tags":     c.Tags,
-				"name":     c.Name,
-				"intro":    c.Intro,
-				"quantity": quantity,
-			})
+			result = append(result, c)
 		}
 		this.Json(result, 200)
 	}

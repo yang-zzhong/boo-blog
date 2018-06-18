@@ -6,7 +6,6 @@ import (
 	httprouter "github.com/yang-zzhong/go-httprouter"
 	. "github.com/yang-zzhong/go-model"
 	. "github.com/yang-zzhong/go-querybuilder"
-	"log"
 )
 
 type Tag struct{ *Controller }
@@ -46,9 +45,8 @@ func (this *Tag) ArticleUsed(req *httprouter.Request, p *helpers.P) {
 	} else {
 		var result []map[string]string
 		for _, m := range models {
-			log.Print(m)
 			for _, tag := range m.(*model.Blog).Tags {
-				if tag == "" {
+				if tag == "" || this.in(result, tag) {
 					continue
 				}
 				result = append(result, map[string]string{"name": tag})
@@ -80,4 +78,13 @@ func (this *Tag) renderRepo(repo *Repo) {
 		}
 		this.Json(result, 200)
 	}
+}
+
+func (this *Tag) in(arr []map[string]string, item string) bool {
+	for _, it := range arr {
+		if it["name"] == item {
+			return true
+		}
+	}
+	return false
 }
