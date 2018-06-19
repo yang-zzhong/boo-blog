@@ -23,6 +23,8 @@ func (this *User) One(req *httprouter.Request, p *helpers.P) {
 		if theme, err := m.(*model.User).One("theme"); err != nil {
 			this.InternalError(err)
 			return
+		} else if theme == nil {
+			this.Json(result, 200)
 		} else {
 			for f, v := range theme.(*model.Theme).Map() {
 				if f == "name" {
@@ -40,19 +42,25 @@ func (this *User) SaveBlogInfo(req *httprouter.Request, p *helpers.P) {
 	if m, exist, err := theme.Repo().Find(p.Get("visitor_id")); err != nil {
 		this.InternalError(err)
 	} else if !exist {
-		this.String("没有找到主题", 404)
+		theme.UserId = p.Get("visitor_id").(uint32)
 	} else {
 		theme = m.(*model.Theme)
-		data := map[string]interface{}{
-			"bg_image_id":   req.FormValue("bg_image_id"),
-			"name":          req.FormValue("blog_name"),
-			"bg_color":      req.FormValue("bg_color"),
-			"info_bg_color": req.FormValue("info_bg_color"),
-			"name_color":    req.FormValue("name_color"),
-		}
-		theme.Fill(data)
-		if err := theme.Save(); err != nil {
-			this.InternalError(err)
-		}
+	}
+	data := map[string]interface{}{
+		"name":               req.FormValue("blog_name"),
+		"header_bg_image_id": req.FormValue("header_bg_image_id"),
+		"info_bg_image_id":   req.FormValue("info_bg_image_id"),
+		"bg_color":           req.FormValue("bg_color"),
+		"fg_color":           req.FormValue("fg_color"),
+		"tag_fg_color":       req.FormValue("tag_fg_color"),
+		"tag_bg_color":       req.FormValue("tag_bg_color"),
+		"header_bg_color":    req.FormValue("header_bg_color"),
+		"header_fg_color":    req.FormValue("header_fg_color"),
+		"paper_bg_color":     req.FormValue("paper_bg_color"),
+		"paper_fg_color":     req.FormValue("paper_fg_color"),
+	}
+	theme.Fill(data)
+	if err := theme.Save(); err != nil {
+		this.InternalError(err)
 	}
 }
