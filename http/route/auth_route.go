@@ -34,6 +34,10 @@ func registerBlogInfoRoutes(router *httprouter.Router) {
 		user := &controller.User{controller.NewController(w)}
 		user.SaveBlogInfo(req, p)
 	})
+	router.Post("/user-info", func(w ResponseWriter, req *httprouter.Request, p *P) {
+		user := &controller.User{controller.NewController(w)}
+		user.SaveUserInfo(req, p)
+	})
 }
 
 func registerTagAuthRoutes(router *httprouter.Router) {

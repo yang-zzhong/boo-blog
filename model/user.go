@@ -10,15 +10,16 @@ import (
 )
 
 type User struct {
-	Id          uint32    `db:"id bigint pk"`
-	Name        string    `db:"name varchar(128) uk"`
-	NickName    string    `db:"nickname varchar(128) nil"`
-	EmailAddr   string    `db:"email_addr varchar(128) nil"`
-	PhoneNumber string    `db:"phone_number varchar(128) nil"`
-	Password    string    `db:"password varchar(128)"`
-	Salt        string    `db:"salt char(8)"`
-	CreatedAt   time.Time `db:"created_at datetime"`
-	UpdatedAt   time.Time `db:"updated_at datetime"`
+	Id              uint32    `db:"id bigint pk"`
+	Name            string    `db:"name varchar(128) uk"`
+	NickName        string    `db:"nickname varchar(128) nil"`
+	EmailAddr       string    `db:"email_addr varchar(128) nil"`
+	PhoneNumber     string    `db:"phone_number varchar(128) nil"`
+	PortraitImageId string    `db:"portrait_image_id varchar(32) nil"`
+	Password        string    `db:"password varchar(128)"`
+	Salt            string    `db:"salt char(8)"`
+	CreatedAt       time.Time `db:"created_at datetime"`
+	UpdatedAt       time.Time `db:"updated_at datetime"`
 	*Base
 }
 

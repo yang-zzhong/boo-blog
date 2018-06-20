@@ -37,6 +37,21 @@ func (this *User) One(req *httprouter.Request, p *helpers.P) {
 	}
 }
 
+func (this *User) SaveUserInfo(req *httprouter.Request, p *helpers.P) {
+	user := model.NewUser()
+	if m, exist, err := user.Repo().Find(p.Get("visitor_id")); err != nil {
+		this.InternalError(err)
+	} else if !exist {
+		this.String("用户不存在", 500)
+	} else {
+		user = m.(*model.User)
+	}
+	user.PortraitImageId = req.FormValue("portrait_image_id")
+	if err := user.Save(); err != nil {
+		this.InternalError(err)
+	}
+}
+
 func (this *User) SaveBlogInfo(req *httprouter.Request, p *helpers.P) {
 	theme := model.NewTheme()
 	if m, exist, err := theme.Repo().Find(p.Get("visitor_id")); err != nil {

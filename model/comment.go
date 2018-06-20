@@ -11,6 +11,7 @@ type Comment struct {
 	Id             uint32    `db:"id bigint pk"`
 	Content        string    `db:"content long_text"`
 	UserId         uint32    `db:"user_id bigint"`
+	Reply          uint32    `db:"reply bigint"`
 	Ats            []string  `db:"ats text nil"`
 	BlogId         uint32    `db:"blog_id bigint"`
 	CommentId      uint32    `db:"comment_Id bigint nil"`
@@ -26,6 +27,9 @@ func NewComment() *Comment {
 	})
 	comment.DeclareOne("blog", new(Blog), map[string]string{
 		"blog_id": "id",
+	})
+	comment.DeclareOne("reply", new(User), map[string]string{
+		"reply": "id",
 	})
 	return comment
 }

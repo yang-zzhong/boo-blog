@@ -2,8 +2,10 @@ package route
 
 import (
 	"boo-blog/http/controller"
+	qrcode "github.com/skip2/go-qrcode"
 	. "github.com/yang-zzhong/go-helpers"
 	httprouter "github.com/yang-zzhong/go-httprouter"
+	"io"
 	. "net/http"
 )
 
@@ -75,5 +77,19 @@ func registerImagePublicRoutes(router *httprouter.Router) {
 	router.Get("/images/:id", func(w ResponseWriter, req *httprouter.Request, p *P) {
 		image := &controller.Image{controller.NewController(w)}
 		image.Get(req, p)
+	})
+}
+
+func registerQrCodeRoute(router *httprouter.Router) {
+	router.Get("/qr-code", func(w ResponseWriter, req *httprouter.Request, _ *P) {
+		if png, err := qrcode.Encode(req.FormValue("url"), qrcode.Medium, 256); err != nil {
+			io.WriteString(w, err.Error())
+			return
+		} else {
+			w.Header().Set("Content-Type", "image/png")
+			if _, err := w.Write(png); err != nil {
+				io.WriteString(w, err.Error())
+			}
+		}
 	})
 }
