@@ -51,6 +51,10 @@ func (comment *Comment) Value(colname string, value interface{}) (result reflect
 	return
 }
 
+func (comment *Comment) Display() string {
+	return comment.Content
+}
+
 func (comment *Comment) Instance() *Comment {
 	comment.Id = uuid.New().ID()
 	comment.CommentedAt = time.Now()

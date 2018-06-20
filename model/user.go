@@ -16,8 +16,8 @@ type User struct {
 	EmailAddr       string    `db:"email_addr varchar(128) nil"`
 	PhoneNumber     string    `db:"phone_number varchar(128) nil"`
 	PortraitImageId string    `db:"portrait_image_id varchar(32) nil"`
-	Password        string    `db:"password varchar(128)"`
-	Salt            string    `db:"salt char(8)"`
+	Password        string    `db:"password varchar(128) protected"`
+	Salt            string    `db:"salt char(8) protected"`
 	CreatedAt       time.Time `db:"created_at datetime"`
 	UpdatedAt       time.Time `db:"updated_at datetime"`
 	*Base

@@ -5,20 +5,18 @@ import (
 	helpers "github.com/yang-zzhong/go-helpers"
 	httprouter "github.com/yang-zzhong/go-httprouter"
 	. "github.com/yang-zzhong/go-querybuilder"
-	"time"
 )
 
 type Comment struct{ *Controller }
 
 func (this *Comment) Create(req *httprouter.Request, p *helpers.P) {
-	comment := model.NewComment().NewInstance()
+	comment := model.NewComment().Instance()
 	comment.Fill(map[string]interface{}{
-		"user_id":      p.Get("visitor_id"),
-		"content":      req.FormValue("content"),
-		"blog_id":      req.FormValue("blog_id"),
-		"ats":          this.parseAts(req.FormValue("content")),
-		"comment_id":   req.FormValue("comment_id"),
-		"commented_at": time.Now(),
+		"user_id":    p.Get("visitor_id"),
+		"content":    req.FormValue("content"),
+		"blog_id":    req.FormValue("blog_id"),
+		"ats":        this.parseAts(req.FormValue("content")),
+		"comment_id": req.FormValue("comment_id"),
 	})
 
 	if err := comment.Save(); err != nil {
@@ -37,14 +35,32 @@ func (this *Comment) Articles(req *httprouter.Request) {
 		var result []map[string]interface{}
 		for _, item := range data {
 			c := item.(*model.Comment)
+			replyName := ""
+			userName := ""
+			if reply, err := c.One("reply"); err != nil {
+				this.InternalError(err)
+				return
+			} else if reply != nil {
+				replyName = reply.(*model.User).Name
+			}
+			if user, err := c.One("user"); err != nil {
+				this.InternalError(err)
+				return
+			} else if user != nil {
+				userName = user.(*model.User).Name
+			}
 			result = append(result, map[string]interface{}{
 				"user_id":      c.UserId,
 				"content":      c.Display(),
-				"reply":        c.GetOne("reply").(*model.User).Name,
-				"user_name":    c.GetOne("user").(*model.User).Name,
+				"reply":        replyName,
+				"user_name":    userName,
 				"commented_at": c.CommentedAt,
 			})
 		}
 		this.Json(result, 200)
 	}
+}
+
+func (this *Comment) parseAts(content string) []uint32 {
+	return []uint32{}
 }
