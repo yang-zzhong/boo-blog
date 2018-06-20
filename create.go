@@ -24,6 +24,7 @@ func main() {
 		NewTag().Repo(),
 		NewUserImage().Repo(),
 		NewUser().Repo(),
+		NewComment().Repo(),
 	}
 	for _, repo := range repos {
 		err := repo.CreateRepo()

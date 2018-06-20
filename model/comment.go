@@ -9,7 +9,7 @@ import (
 
 type Comment struct {
 	Id             uint32    `db:"id bigint pk"`
-	Content        string    `db:"content long_text"`
+	Content        string    `db:"content longtext"`
 	UserId         uint32    `db:"user_id bigint"`
 	Reply          uint32    `db:"reply bigint"`
 	Ats            []string  `db:"ats text nil"`
@@ -18,6 +18,10 @@ type Comment struct {
 	CommentAllowed bool      `db:"comment_allowed int"`
 	CommentedAt    time.Time `db:"commented_at datetime"`
 	*model.Base
+}
+
+func (comment *Comment) TableName() string {
+	return "blog_comments"
 }
 
 func NewComment() *Comment {

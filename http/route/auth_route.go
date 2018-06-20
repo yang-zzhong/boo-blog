@@ -20,6 +20,10 @@ func registerBlogAuthRoutes(router *httprouter.Router) {
 		blog := &controller.Article{controller.NewController(w)}
 		blog.Remove(req, p)
 	})
+	router.Post("/blogs/:blog_id/comments", func(w ResponseWriter, req *httprouter.Request, p *P) {
+		comment := &controller.Comment{controller.NewController(w)}
+		comment.Create(req, p)
+	})
 }
 
 func registerImageAuthRoutes(router *httprouter.Router) {

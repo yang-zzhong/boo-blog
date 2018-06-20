@@ -22,6 +22,10 @@ func registerBlogPublicRoutes(router *httprouter.Router) {
 		blog := &controller.Article{controller.NewController(w)}
 		blog.GetOne(req, p)
 	})
+	router.Get("/blogs/:blog_id/comments", func(w ResponseWriter, _ *httprouter.Request, p *P) {
+		comment := &controller.Comment{controller.NewController(w)}
+		comment.Articles(p)
+	})
 }
 
 func registerCatePublicRoutes(router *httprouter.Router) {
