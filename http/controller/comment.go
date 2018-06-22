@@ -32,8 +32,8 @@ func (this *Comment) Create(req *httprouter.Request, p *helpers.P) {
 
 func (this *Comment) Articles(p *helpers.P) {
 	comment := model.NewComment()
-	blogId, _ := strconv.ParseUint(p.Get("blog_id").(string), 10, 32)
-	comment.Repo().Where("blog_id", uint32(blogId))
+	// blogId, _ := strconv.ParseUint(p.Get("blog_id").(string), 10, 32)
+	comment.Repo().Where("blog_id", p.Get("blog_id"))
 	comment.Repo().With("user").With("reply")
 	comment.Repo().OrderBy("commented_at", DESC)
 	if data, err := comment.Repo().Fetch(); err != nil {
