@@ -9,6 +9,29 @@ import (
 
 type User struct{ *Controller }
 
+func (this *User) Find(req *httprouter.Request) {
+	user := model.NewUser()
+	if keyword := req.FormValue("keyword"); keyword != "" {
+		user.Repo().Quote(func(repo *Builder) {
+			repo.Where("name", LIKE, "%"+keyword+"%").
+				Or().Where("phone_number", LIKE, "%"+keyword+"%").
+				Or().Where("email_addr", LIKE, "%"+keyword+"%")
+		})
+	}
+	user.Repo().OrderBy("created_at", ASC)
+	user.Repo().Limit(10)
+	user.Repo().With("current_theme")
+	if ms, err := user.Repo().Fetch(); err != nil {
+		this.InternalError(err)
+	} else {
+		result := []map[string]interface{}{}
+		for _, m := range ms {
+			result = append(result, m.(*model.User).Profile())
+		}
+		this.Json(result, 200)
+	}
+}
+
 func (this *User) Profile(p *helpers.P) {
 	user := model.NewUser()
 	if m, exists, err := user.Repo().Find(p.Get("user_id")); err != nil {

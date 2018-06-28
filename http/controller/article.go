@@ -21,8 +21,10 @@ func (this *Article) Find(req *httprouter.Request) {
 		blog.Repo().Where("tags", LIKE, "%"+tag+"%")
 	}
 	if keyword := req.FormValue("keyword"); keyword != "" {
-		blog.Repo().Where("title", LIKE, "%"+keyword+"%").
-			Or().Where("content", LIKE, "%"+keyword+"%")
+		blog.Repo().Quote(func(repo *Builder) {
+			repo.Where("title", LIKE, "%"+keyword+"%").
+				Or().Where("overview", LIKE, "%"+keyword+"%")
+		})
 	}
 	if p := req.FormInt("page"); p != 0 {
 		ps := req.FormInt("page_size")
@@ -31,7 +33,10 @@ func (this *Article) Find(req *httprouter.Request) {
 		}
 		blog.Repo().Page(int(p), int(ps))
 	}
-	blog.Repo().OrderBy("created_at", DESC)
+	blog.Repo().OrderBy("thumb_up", DESC).
+		OrderBy("created_at", DESC).
+		OrderBy("thumb_down", ASC).
+		OrderBy("comments", DESC)
 	if req.FormValue("with-author") == "1" {
 		blog.Repo().With("author")
 	}
