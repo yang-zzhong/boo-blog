@@ -21,6 +21,9 @@ type Blog struct {
 	UserId    uint32    `db:"user_id bigint"`
 	CateId    uint32    `db:"cate_id bigint nil"`
 	Tags      []string  `db:"tags varchar(256) nil"`
+	Comments  int       `db:"comments int"`
+	ThumbUp   int       `db:"thumb_up int"`
+	ThumbDown int       `db:"thumb_down int"`
 	CreatedAt time.Time `db:"created_at datetime"`
 	UpdatedAt time.Time `db:"updated_at datetime"`
 	*model.Base

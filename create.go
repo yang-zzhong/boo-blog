@@ -18,6 +18,7 @@ func main() {
 	}
 	repos := []*model.Repo{
 		NewBlog().Repo(),
+		NewVote().Repo(),
 		NewCate().Repo(),
 		NewImage().Repo(),
 		NewTheme().Repo(),
