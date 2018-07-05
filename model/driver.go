@@ -8,7 +8,6 @@ import (
 	query "github.com/yang-zzhong/go-querybuilder"
 	"os"
 	"reflect"
-	"strings"
 )
 
 type IdMaker interface {
@@ -80,16 +79,16 @@ func dsn() string {
 }
 
 func nullArrayDBValue(value interface{}) interface{} {
-	result, err := json.Marshal(value)
-	return result
+	result, _ := json.Marshal(value)
+	return string(result)
 }
 
 func nullArrayValue(value interface{}) (result reflect.Value) {
 	v := value.(sql.NullString)
 	if v.Valid {
-		val, _ := v.Value().(string)
+		val, _ := v.Value()
 		r := []string{}
-		json.Unmarshal([]byte(val), &r)
+		json.Unmarshal([]byte(val.(string)), &r)
 		result = reflect.ValueOf(r)
 	} else {
 		result = reflect.ValueOf([]string{})
