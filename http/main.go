@@ -59,6 +59,8 @@ func main() {
 		panic(err)
 	}
 	model.InitDriver(s.Config().Section("database"))
+	redis := s.Config().Section("redis")
+	cache.InitRedis(redis.Get("addr").String(), redis.Get("password").String())
 	s.StartServer()
 }
 

@@ -2,7 +2,6 @@ package model
 
 import (
 	"database/sql"
-	"github.com/go-ini/ini"
 	_ "github.com/go-sql-driver/mysql"
 	model "github.com/yang-zzhong/go-model"
 	. "github.com/yang-zzhong/go-querybuilder"
@@ -15,37 +14,38 @@ type IdMaker interface {
 	NewId() interface{}
 }
 
-type config struct {
-	driver    string
-	host      string
-	port      string
-	username  string
-	password  string
-	database  string
-	image_dir string
-	blog_dir  string
+type Config struct {
+	Driver   string
+	Host     string
+	Port     string
+	Username string
+	Password string
+	Database string
+	ImageDir string
+	BlogDir  string
 }
 
-var conf config
+var conf Config
 var DB *sql.DB
 
-func InitDriver(config *ini.Section) {
-	conf.driver = config.Key("driver").String()
-	conf.host = config.Key("host").String()
-	conf.port = config.Key("port").String()
-	conf.username = config.Key("username").String()
-	conf.password = config.Key("password").String()
-	conf.database = config.Key("database").String()
-	conf.image_dir = config.Key("image_dir").String()
-	conf.blog_dir = config.Key("blog_dir").String()
-	if conn, err := sql.Open(conf.driver, dsn()); err != nil {
-		panic(err)
-	} else {
-		model.Config(conn, &MysqlModifier{})
-		DB = conn
+func InitDriver(config *Config) error {
+	conf = config
+	sureDir(conf.ImageDir)
+	sureDir(conf.BlogDir)
+}
+
+func OpenDB() error {
+	if conn, err := sql.Open(conf.Driver, dsn()); err != nil {
+		return err
 	}
-	sureDir(conf.image_dir)
-	sureDir(conf.blog_dir)
+	model.Config(conn, &MysqlModifier{})
+	DB = conn
+
+	return nil
+}
+
+func CloseDB() {
+	DB.Close()
 }
 
 func sureDir(dir string) {
@@ -68,15 +68,15 @@ func sureDir(dir string) {
 }
 
 func dsn() string {
-	dsn := conf.username + ":" + conf.password + "@"
-	if conf.host != "" {
-		dsn += "tcp(" + conf.host
-		if conf.port != "" {
-			dsn += ":" + conf.port
+	dsn := conf.Username + ":" + conf.Password + "@"
+	if conf.Host != "" {
+		dsn += "tcp(" + conf.Host
+		if conf.Port != "" {
+			dsn += ":" + conf.Port
 		}
 		dsn += ")"
 	}
-	dsn += "/" + conf.database + "?parseTime=true"
+	dsn += "/" + conf.Database + "?parseTime=true"
 	return dsn
 }
 
