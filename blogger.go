@@ -7,6 +7,7 @@ import (
 	"errors"
 	"github.com/go-ini/ini"
 	. "github.com/yang-zzhong/go-model"
+	. "github.com/yang-zzhong/go-querybuilder"
 )
 
 const (
@@ -69,32 +70,34 @@ func (blogger *Blogger) SetConfig(configFile string) error {
 
 func (blogger *Blogger) CreateTable() error {
 	blogger.initModel()
-	if err := model.OpenDB(); err != nil {
+	if db, err := model.OpenDB(); err != nil {
 		return err
-	}
-	defer model.CloseDB()
-	repos := []*Repo{
-		model.NewBlog().Repo(),
-		model.NewVote().Repo(),
-		model.NewCate().Repo(),
-		model.NewImage().Repo(),
-		model.NewTheme().Repo(),
-		model.NewTag().Repo(),
-		model.NewUserImage().Repo(),
-		model.NewUser().Repo(),
-		model.NewComment().Repo(),
-	}
-	for _, repo := range repos {
-		err := repo.CreateRepo()
-		if err != nil {
-			return err
+	} else {
+		Config(db, &MysqlModifier{})
+		defer db.Close()
+		repos := []*Repo{
+			model.NewBlog().Repo(),
+			model.NewVote().Repo(),
+			model.NewCate().Repo(),
+			model.NewImage().Repo(),
+			model.NewTheme().Repo(),
+			model.NewTag().Repo(),
+			model.NewUserImage().Repo(),
+			model.NewUser().Repo(),
+			model.NewComment().Repo(),
 		}
-		s := "ALTER TABLE " + repo.QuotedTableName() + " CONVERT TO CHARACTER SET utf8"
-		if _, err := model.DB.Exec(s); err != nil {
-			return err
+		for _, repo := range repos {
+			err := repo.CreateRepo()
+			if err != nil {
+				return err
+			}
+			s := "ALTER TABLE " + repo.QuotedTableName() + " CONVERT TO CHARACTER SET utf8"
+			if _, err := db.Exec(s); err != nil {
+				return err
+			}
 		}
-	}
 
+	}
 	return nil
 }
 

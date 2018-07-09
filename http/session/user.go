@@ -25,12 +25,14 @@ func Id(userId uint32) string {
 func User(id string) (user *model.User, ok bool) {
 	redis := cache.NewRedisClient(0)
 	if userId, err := redis.Get(id).Result(); err != nil {
+		log.Print(err)
 		ok = false
 	} else {
-		if m, ok, err := model.NewUser().Repo().Find(userId); err != nil {
+		log.Print(userId)
+		if m, exists, err := model.NewUser().Repo().Find(userId); err != nil {
 			ok = false
-		} else if ok {
-			log.Print(m)
+		} else if exists {
+			ok = exists
 			user = m.(*model.User)
 		}
 	}

@@ -5,6 +5,7 @@ import (
 	model "github.com/yang-zzhong/go-model"
 	"golang.org/x/net/html"
 	"io/ioutil"
+	"log"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -98,6 +99,10 @@ func (blog *Blog) WithOverview(content string) {
 		if nodes > 300 {
 			return true
 		}
+		log.Printf("type %d, data %s, type == html.ElementNode %v, d.Data == style %v", d.Type, d.Data, d.Type == html.ElementNode, d.Data == "style")
+		if d.Type == html.ElementNode && d.Data == "style" {
+			return true
+		}
 		nodes++
 		if d.Type == html.TextNode {
 			blog.Overview += d.Data
@@ -139,15 +144,12 @@ func find(n *html.Node, call callback) bool {
 	if call(n) {
 		return true
 	}
+	var w, d bool
 	for c := n.FirstChild; c != nil; c = c.FirstChild {
-		if find(c, call) {
-			return true
-		}
+		d = find(c, call)
 	}
 	for c := n.NextSibling; c != nil; c = c.NextSibling {
-		if find(c, call) {
-			return true
-		}
+		w = find(c, call)
 	}
-	return false
+	return w || d
 }

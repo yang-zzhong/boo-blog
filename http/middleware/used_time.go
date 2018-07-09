@@ -18,7 +18,7 @@ func (ut *usedTime) Before(_ http.ResponseWriter, _ *httprouter.Request, _ *help
 }
 
 func (ut *usedTime) After(_ http.ResponseWriter, _ *httprouter.Request, _ *helpers.P) bool {
-	log.Print("used: %ds", time.Now().Sub(ut.begin))
+	log.Printf("used: %.5fs", time.Now().Sub(ut.begin).Seconds())
 	return true
 }
 

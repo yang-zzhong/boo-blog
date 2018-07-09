@@ -3,8 +3,6 @@ package model
 import (
 	"database/sql"
 	_ "github.com/go-sql-driver/mysql"
-	model "github.com/yang-zzhong/go-model"
-	. "github.com/yang-zzhong/go-querybuilder"
 	"os"
 	"reflect"
 	"strings"
@@ -26,7 +24,6 @@ type Config struct {
 }
 
 var conf *Config
-var DB *sql.DB
 
 func InitDriver(config *Config) {
 	conf = config
@@ -34,18 +31,8 @@ func InitDriver(config *Config) {
 	sureDir(conf.BlogDir)
 }
 
-func OpenDB() error {
-	if conn, err := sql.Open(conf.Driver, dsn()); err != nil {
-		return err
-	} else {
-		model.Config(conn, &MysqlModifier{})
-		DB = conn
-		return nil
-	}
-}
-
-func CloseDB() {
-	DB.Close()
+func OpenDB() (*sql.DB, error) {
+	return sql.Open(conf.Driver, dsn())
 }
 
 func sureDir(dir string) {

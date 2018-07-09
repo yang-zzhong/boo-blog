@@ -11,8 +11,6 @@ type authUser struct{}
 
 func (au *authUser) Before(w http.ResponseWriter, req *httprouter.Request, p *helpers.P) bool {
 	user, logged := session.User(req.Header.Get("id"))
-	// s, _ := session.Store.Get(req.Request, "auth")
-	// s.Options.Domain = "192.168.3.206:8081"
 	if !logged {
 		w.WriteHeader(401)
 		return false
