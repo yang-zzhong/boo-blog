@@ -1,7 +1,7 @@
 package model
 
 import (
-	. "github.com/yang-zzhong/go-model"
+	model "github.com/yang-zzhong/go-model"
 )
 
 type Theme struct {
@@ -17,7 +17,7 @@ type Theme struct {
 	HeaderFgColor   string `db:"header_fg_color varchar(16) nil"`
 	PaperBgColor    string `db:"paper_bg_color varchar(16) nil"`
 	PaperFgColor    string `db:"paper_fg_color varchar(16) nil"`
-	*Base
+	*model.Base
 }
 
 func (this *Theme) TableName() string {
@@ -25,7 +25,7 @@ func (this *Theme) TableName() string {
 }
 
 func NewTheme() *Theme {
-	theme := NewModel(new(Theme)).(*Theme)
+	theme := model.NewModel(new(Theme)).(*Theme)
 	theme.DeclareOne("user", new(User), map[string]string{
 		"user_id": "id",
 	})

@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 	"github.com/google/uuid"
 	helpers "github.com/yang-zzhong/go-helpers"
-	. "github.com/yang-zzhong/go-model"
+	model "github.com/yang-zzhong/go-model"
 	"time"
 )
 
@@ -20,7 +20,7 @@ type User struct {
 	Salt            string    `db:"salt char(8) protected"`
 	CreatedAt       time.Time `db:"created_at datetime"`
 	UpdatedAt       time.Time `db:"updated_at datetime"`
-	*Base
+	*model.Base
 }
 
 func (user *User) TableName() string {
@@ -33,7 +33,7 @@ func (user *User) Encrypt(str string) string {
 }
 
 func NewUser() *User {
-	user := NewModel(new(User)).(*User)
+	user := model.NewModel(new(User)).(*User)
 	user.DeclareMany("blogs", new(Blog), map[string]string{
 		"id": "user_id",
 	})

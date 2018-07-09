@@ -7,7 +7,9 @@ import (
 	"net/http"
 )
 
-func AuthUser(w http.ResponseWriter, req *httprouter.Request, p *helpers.P) bool {
+type authUser struct{}
+
+func (au *authUser) Before(w http.ResponseWriter, req *httprouter.Request, p *helpers.P) bool {
 	user, logged := session.User(req.Header.Get("id"))
 	// s, _ := session.Store.Get(req.Request, "auth")
 	// s.Options.Domain = "192.168.3.206:8081"
@@ -20,3 +22,9 @@ func AuthUser(w http.ResponseWriter, req *httprouter.Request, p *helpers.P) bool
 
 	return true
 }
+
+func (au *authUser) After(_ http.ResponseWriter, _ *httprouter.Request, _ *helpers.P) bool {
+	return true
+}
+
+var AuthUser authUser

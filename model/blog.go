@@ -56,7 +56,7 @@ func (blog *Blog) SaveContent(content string) error {
 
 func (blog *Blog) Pathfile() string {
 	id := strconv.FormatUint(uint64(blog.UserId), 32)
-	return conf.blog_dir + id + "-" + blog.Title + ".html"
+	return conf.BlogDir + id + "-" + blog.Title + ".html"
 }
 
 func (blog *Blog) WithUrlId() *Blog {

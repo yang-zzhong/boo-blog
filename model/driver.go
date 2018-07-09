@@ -25,10 +25,10 @@ type Config struct {
 	BlogDir  string
 }
 
-var conf Config
+var conf *Config
 var DB *sql.DB
 
-func InitDriver(config *Config) error {
+func InitDriver(config *Config) {
 	conf = config
 	sureDir(conf.ImageDir)
 	sureDir(conf.BlogDir)
@@ -37,11 +37,11 @@ func InitDriver(config *Config) error {
 func OpenDB() error {
 	if conn, err := sql.Open(conf.Driver, dsn()); err != nil {
 		return err
+	} else {
+		model.Config(conn, &MysqlModifier{})
+		DB = conn
+		return nil
 	}
-	model.Config(conn, &MysqlModifier{})
-	DB = conn
-
-	return nil
 }
 
 func CloseDB() {

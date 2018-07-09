@@ -69,13 +69,15 @@ func (this *Login) Login(req *httprouter.Request) {
 		this.String("用户名或密码不正确", 500)
 		return
 	}
-	id := session.Save(user)
-
-	this.Json(map[string]interface{}{
-		"sId":  id,
-		"id":   user.Id,
-		"name": user.Name,
-	}, 200)
+	if id, err := session.Save(user); err != nil {
+		this.InternalError(err)
+	} else {
+		this.Json(map[string]interface{}{
+			"sId":  id,
+			"id":   user.Id,
+			"name": user.Name,
+		}, 200)
+	}
 }
 
 func (this *Login) Logout(req *httprouter.Request) {

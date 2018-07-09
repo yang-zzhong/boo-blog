@@ -2,16 +2,16 @@ package model
 
 import (
 	helpers "github.com/yang-zzhong/go-helpers"
-	. "github.com/yang-zzhong/go-model"
+	model "github.com/yang-zzhong/go-model"
 	"time"
 )
 
 type UserLogin struct {
-	Id       string    `db:"id varcher(128) pk"`
-	UserId   string    `db:"user_id varcher(128)"`
-	City     string    `db:"city varchar(64) nil"`
-	LoginAt  time.Time `db:"login_at datatime"`
-	LogoutAt NullTime  `db:"logout_at datetime nil"`
+	Id       string         `db:"id varcher(128) pk"`
+	UserId   string         `db:"user_id varcher(128)"`
+	City     string         `db:"city varchar(64) nil"`
+	LoginAt  time.Time      `db:"login_at datatime"`
+	LogoutAt model.NullTime `db:"logout_at datetime nil"`
 }
 
 func (ul *UserLogin) TableName() string {
@@ -27,5 +27,5 @@ func (ul *UserLogin) NewId() interface{} {
 }
 
 func NewUserLogin() *UserLogin {
-	return NewModel(new(UserLogin)).(*UserLogin)
+	return model.NewModel(new(UserLogin)).(*UserLogin)
 }

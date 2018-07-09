@@ -1,24 +1,19 @@
 package session
 
 import (
+	"boo-blog/cache"
 	"boo-blog/model"
-	"bytes"
 	"crypto/md5"
-	"encoding/base64"
-	"encoding/gob"
 	"encoding/hex"
-	"github.com/go-redis/redis"
+	"log"
 	"strconv"
 )
 
-func Save(user *model.User) string {
-	id := Id(user.Id)
-	if users == nil {
-		users = make(map[string]*model.User)
-	}
-	users[id] = togob64(user)
-
-	return id
+func Save(user *model.User) (id string, err error) {
+	redis := cache.NewRedisClient(0)
+	id = Id(user.Id)
+	err = redis.Set(id, user.Id, 0).Err()
+	return
 }
 
 func Id(userId uint32) string {
@@ -28,43 +23,22 @@ func Id(userId uint32) string {
 }
 
 func User(id string) (user *model.User, ok bool) {
-	var str string
 	redis := cache.NewRedisClient(0)
-	if !ok {
-		return
+	if userId, err := redis.Get(id).Result(); err != nil {
+		ok = false
+	} else {
+		if m, ok, err := model.NewUser().Repo().Find(userId); err != nil {
+			ok = false
+		} else if ok {
+			log.Print(m)
+			user = m.(*model.User)
+		}
 	}
-	user = fromgob64(str)
 
 	return
 }
 
 func Del(id string) {
-	delete(users, id)
-}
-
-func togob64(user *model.User) string {
-	b := bytes.Buffer{}
-	e := gob.NewEncoder(&b)
-	err := e.Encode(*user)
-	if err != nil {
-		panic(err)
-	}
-
-	return base64.StdEncoding.EncodeToString(b.Bytes())
-}
-
-func fromgob64(str string) *model.User {
-	user := model.User{}
-	by, err := base64.StdEncoding.DecodeString(str)
-	if err != nil {
-		panic(err)
-	}
-	b := bytes.Buffer{}
-	b.Write(by)
-	d := gob.NewDecoder(&b)
-	err = d.Decode(&user)
-	if err != nil {
-		panic(err)
-	}
-	return &user
+	redis := cache.NewRedisClient(0)
+	redis.Del(id)
 }

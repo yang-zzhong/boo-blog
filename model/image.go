@@ -40,7 +40,7 @@ func (image *Image) TableName() string {
 }
 
 func (image *Image) Pathfile() string {
-	return conf.image_dir + image.Name
+	return conf.ImageDir + image.Name
 }
 
 func (image *Image) FillWithMultipart(src mp.File, header *mp.FileHeader) error {

@@ -4,6 +4,7 @@ import (
 	"boo-blog/cache"
 	"boo-blog/http"
 	"boo-blog/model"
+	"errors"
 	"github.com/go-ini/ini"
 	. "github.com/yang-zzhong/go-model"
 )
@@ -35,7 +36,7 @@ func (blogger *Blogger) StartHttp() error {
 	if blogger.serverRunning {
 		return errors.New("server is running")
 	}
-	blogger.RestartHttp()
+	return blogger.RestartHttp()
 }
 
 func (blogger *Blogger) RestartHttp() error {
@@ -46,20 +47,24 @@ func (blogger *Blogger) RestartHttp() error {
 		return err
 	}
 	blogger.serverRunning = true
+	return nil
 }
 
-func (blogger *Blogger) Config() {
+func (blogger *Blogger) Config() *ini.File {
 	return blogger.config
 }
 
-func (blogger *Blogger) SetConfig(configFile) error {
+func (blogger *Blogger) SetConfig(configFile string) error {
+	var err error
 	if blogger.config, err = ini.Load(configFile); err != nil {
 		return err
 	}
 	blogger.configFile = configFile
 	if blogger.serverRunning {
-		blogger.RestartHttp()
+		return blogger.RestartHttp()
 	}
+
+	return nil
 }
 
 func (blogger *Blogger) CreateTable() error {
@@ -89,9 +94,11 @@ func (blogger *Blogger) CreateTable() error {
 			return err
 		}
 	}
+
+	return nil
 }
 
-func (blogger *Blogger) initModel() error {
+func (blogger *Blogger) initModel() {
 	config := blogger.config.Section("database")
 	dc := &model.Config{
 		Driver:   config.Key("driver").String(),
@@ -103,7 +110,8 @@ func (blogger *Blogger) initModel() error {
 		ImageDir: config.Key("image_dir").String(),
 		BlogDir:  config.Key("blog_dir").String(),
 	}
-	return model.InitDriver(dc)
+
+	model.InitDriver(dc)
 }
 
 func (blogger *Blogger) initCache() {
@@ -115,6 +123,6 @@ func (blogger *Blogger) initHttp() {
 	config := blogger.config.Section("server")
 	http.InitHttp(
 		config.Key("doc_root").String(),
-		config.Key("Port").String(),
+		config.Key("port").String(),
 		config.Key("session_secret").String())
 }

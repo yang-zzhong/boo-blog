@@ -5,32 +5,28 @@ import (
 	. "github.com/yang-zzhong/go-helpers"
 	httprouter "github.com/yang-zzhong/go-httprouter"
 	"io"
-	"log"
 	. "net/http"
 )
 
 func Router(docRoot string) *httprouter.Router {
-	defer func() {
-		if r := recover(); r != nil {
-			log.Print(r)
-		}
-	}()
 	router := httprouter.NewRouter()
 	router.DocRoot = docRoot
-	router.Before = func(w ResponseWriter, req *httprouter.Request, p *P) bool {
+	router.BeforeApi = func(w ResponseWriter, req *httprouter.Request, p *P) bool {
 		if req.Request.Method == MethodOptions {
-			middleware.AcrossDomain(w, req, p)
+			ad := middleware.AcrossDomain
+			(&ad).Before(w, req, p)
 			return false
 		}
 		return true
 	}
-	ms := httprouter.NewMs()
-	ms.Append(middleware.AcrossDomain)
+	ms := []httprouter.Middleware{
+		&middleware.UsedTime,
+		&middleware.DB,
+		&middleware.AcrossDomain,
+	}
 	router.Group("/api", ms, func(router *httprouter.Router) {
 		registerPublicRoute(router)
-		ms := httprouter.NewMs()
-		ms.Append(middleware.AuthUser)
-		router.Group("", ms, registerNeedAuthRoute)
+		router.Group("", []httprouter.Middleware{&middleware.AuthUser}, registerNeedAuthRoute)
 	})
 	return router
 }

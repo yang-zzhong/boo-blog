@@ -1,5 +1,12 @@
 package http
 
+import (
+	"boo-blog/http/route"
+	"boo-blog/http/session"
+	"log"
+	"net/http"
+)
+
 type Httpd struct {
 	DocRoot       string
 	Port          string
@@ -7,14 +14,10 @@ type Httpd struct {
 	running       bool
 }
 
-var Http *Httpd
+var Http Httpd
 
-func InitHttp(docRoot, port, sessionSecret string) error {
-	Http := new(Httpd)
-	Http.DocRoot = docRoot
-	Http.Port = port
-	Http.SessionSecret = sessionSecret
-	Http.running = false
+func InitHttp(docRoot, port, sessionSecret string) {
+	Http = Httpd{docRoot, port, sessionSecret, false}
 }
 
 func Start() error {
@@ -22,4 +25,6 @@ func Start() error {
 	log.Print("listen on :" + Http.Port)
 	Http.running = true
 	go log.Fatal(http.ListenAndServe(":"+Http.Port, route.Router(Http.DocRoot)))
+
+	return nil
 }

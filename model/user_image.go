@@ -2,7 +2,7 @@ package model
 
 import (
 	"github.com/google/uuid"
-	. "github.com/yang-zzhong/go-model"
+	model "github.com/yang-zzhong/go-model"
 	"reflect"
 	"time"
 )
@@ -15,7 +15,7 @@ type UserImage struct {
 	Tags      []string  `db:"tags varchar(256) nil"`
 	CreatedAt time.Time `db:"created_at datetime"`
 	UpdatedAt time.Time `db:"updated_at datetime"`
-	*Base
+	*model.Base
 }
 
 func (this *UserImage) TableName() string {
@@ -40,7 +40,7 @@ func (this *UserImage) Value(colname string, value interface{}) (result reflect.
 }
 
 func NewUserImage() *UserImage {
-	ui := NewModel(new(UserImage)).(*UserImage)
+	ui := model.NewModel(new(UserImage)).(*UserImage)
 	ui.DeclareOne("image", new(Image), map[string]string{
 		"hash": "hash",
 	})
