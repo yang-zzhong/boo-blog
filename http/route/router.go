@@ -21,7 +21,7 @@ func Router(docRoot string) *httprouter.Router {
 	}
 	ms := []httprouter.Middleware{
 		&middleware.UsedTime,
-		&middleware.DB,
+		// &middleware.DB,
 		&middleware.AcrossDomain,
 	}
 	router.Group("/api", ms, func(router *httprouter.Router) {

@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	helpers "github.com/yang-zzhong/go-helpers"
 	httprouter "github.com/yang-zzhong/go-httprouter"
+	m "github.com/yang-zzhong/go-model"
 	. "github.com/yang-zzhong/go-querybuilder"
 	"strconv"
 )
@@ -38,7 +39,7 @@ func (this *Comment) Create(req *httprouter.Request, p *helpers.P) {
 	comment.Fill(data)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	err := model.NewComment().Repo().Tx(func(tx *sql.Tx) error {
+	err := m.Conn.Tx(func(tx *sql.Tx) error {
 		if err := comment.Repo().WithTx(tx).Create(comment); err != nil {
 			return err
 		}
@@ -122,7 +123,7 @@ func (this *Comment) Delete(p *helpers.P) {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	err := blog.Repo().Tx(func(tx *sql.Tx) error {
+	err := m.Conn.Tx(func(tx *sql.Tx) error {
 		if err := comment.Repo().WithTx(tx).Delete(comment); err != nil {
 			return err
 		}

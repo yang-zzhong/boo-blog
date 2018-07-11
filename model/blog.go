@@ -5,7 +5,6 @@ import (
 	model "github.com/yang-zzhong/go-model"
 	"golang.org/x/net/html"
 	"io/ioutil"
-	"log"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -90,28 +89,25 @@ func (blog *Blog) WithOverview(content string) {
 		return false
 	})
 	blog.Overview = ""
-	limit := 512
+	limit := 256
 	if blog.Image != "" {
-		limit = 256
+		limit = 128
 	}
 	nodes = 0
 	find(node, func(d *html.Node) bool {
 		if nodes > 300 {
 			return true
 		}
-		log.Printf("type %d, data %s, type == html.ElementNode %v, d.Data == style %v", d.Type, d.Data, d.Type == html.ElementNode, d.Data == "style")
-		if d.Type == html.ElementNode && d.Data == "style" {
-			return true
-		}
 		nodes++
-		if d.Type == html.TextNode {
-			blog.Overview += d.Data
+		if d.Type == html.TextNode && inblock(d) {
+			blog.Overview += strings.Trim(d.Data, " ")
 		}
 		if len(blog.Overview) > limit {
 			return true
 		}
 		return false
 	})
+	blog.Overview = string([]rune(blog.Overview)[0:limit])
 }
 
 func (blog *Blog) Content() string {
@@ -152,4 +148,16 @@ func find(n *html.Node, call callback) bool {
 		w = find(c, call)
 	}
 	return w || d
+}
+
+func inblock(n *html.Node) bool {
+	node := n
+	for node != nil {
+		if node.Type == html.ElementNode && (node.Data == "style" || node.Data == "head" || node.Data == "code") {
+			return false
+		}
+		node = node.Parent
+	}
+
+	return true
 }

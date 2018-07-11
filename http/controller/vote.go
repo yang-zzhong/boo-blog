@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	helpers "github.com/yang-zzhong/go-helpers"
 	httprouter "github.com/yang-zzhong/go-httprouter"
+	m "github.com/yang-zzhong/go-model"
 	"strconv"
 	"time"
 )
@@ -52,7 +53,7 @@ func (this *Vote) Create(req *httprouter.Request, p *helpers.P) {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	err = blog.Repo().Tx(func(tx *sql.Tx) error {
+	err = m.Conn.Tx(func(tx *sql.Tx) error {
 		if err := blog.Repo().WithTx(tx).Update(blog); err != nil {
 			return err
 		}

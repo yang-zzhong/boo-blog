@@ -6,6 +6,7 @@ import (
 	"context"
 	"database/sql"
 	httprouter "github.com/yang-zzhong/go-httprouter"
+	m "github.com/yang-zzhong/go-model"
 )
 
 type Login struct{ *Controller }
@@ -87,7 +88,7 @@ func (this *Login) Logout(req *httprouter.Request) {
 func (this *Login) CreateUser(user *model.User) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	return user.Repo().Tx(func(tx *sql.Tx) error {
+	return m.Conn.Tx(func(tx *sql.Tx) error {
 		if err := user.Repo().WithTx(tx).Create(user); err != nil {
 			return err
 		}

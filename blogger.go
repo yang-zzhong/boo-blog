@@ -7,7 +7,10 @@ import (
 	"errors"
 	"github.com/go-ini/ini"
 	. "github.com/yang-zzhong/go-model"
-	. "github.com/yang-zzhong/go-querybuilder"
+	"log"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 const (
@@ -44,11 +47,32 @@ func (blogger *Blogger) RestartHttp() error {
 	blogger.initModel()
 	blogger.initCache()
 	blogger.initHttp()
+	model.OpenDB()
 	if err := http.Start(); err != nil {
 		return err
 	}
+
 	blogger.serverRunning = true
 	return nil
+}
+
+func (blogger *Blogger) HandleQuitEvent() {
+	c := make(chan os.Signal)
+	signal.Notify(c, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+	go func() {
+		for s := range c {
+			switch s {
+			case syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT:
+				log.Println("退出blogger")
+				blogger.Exit()
+			}
+		}
+	}()
+}
+
+func (blogger *Blogger) Exit() {
+	model.CloseDB()
+	os.Exit(0)
 }
 
 func (blogger *Blogger) Config() *ini.File {
@@ -70,11 +94,10 @@ func (blogger *Blogger) SetConfig(configFile string) error {
 
 func (blogger *Blogger) CreateTable() error {
 	blogger.initModel()
-	if db, err := model.OpenDB(); err != nil {
+	if err := model.OpenDB(); err != nil {
 		return err
 	} else {
-		Config(db, &MysqlModifier{})
-		defer db.Close()
+		defer model.CloseDB()
 		repos := []*Repo{
 			model.NewBlog().Repo(),
 			model.NewVote().Repo(),
@@ -92,7 +115,7 @@ func (blogger *Blogger) CreateTable() error {
 				return err
 			}
 			s := "ALTER TABLE " + repo.QuotedTableName() + " CONVERT TO CHARACTER SET utf8"
-			if _, err := db.Exec(s); err != nil {
+			if _, err := Conn.Exec(s); err != nil {
 				return err
 			}
 		}
