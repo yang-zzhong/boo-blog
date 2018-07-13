@@ -112,7 +112,8 @@ func (blogger *Blogger) CreateTable() error {
 		for _, repo := range repos {
 			err := repo.CreateRepo()
 			if err != nil {
-				return err
+				log.Print(err)
+				continue
 			}
 			s := "ALTER TABLE " + repo.QuotedTableName() + " CONVERT TO CHARACTER SET utf8mb4"
 			if _, err := Conn.Exec(s); err != nil {
