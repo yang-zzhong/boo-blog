@@ -4,6 +4,7 @@ import (
 	"boo-blog/http/route"
 	"boo-blog/http/session"
 	"log"
+	"net"
 	"net/http"
 )
 
@@ -24,7 +25,11 @@ func Start() error {
 	session.InitStore(Http.SessionSecret)
 	log.Print("listen on :" + Http.Port)
 	Http.running = true
-	go log.Fatal(http.ListenAndServe(":"+Http.Port, route.Router(Http.DocRoot)))
+	if l, err := net.Listen("tcp4", ":"+Http.Port); err != nil {
+		return err
+	} else {
+		log.Fatal(http.Serve(l, route.Router(Http.DocRoot)))
+	}
 
 	return nil
 }

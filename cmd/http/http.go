@@ -1,9 +1,14 @@
 package main
 
-import blog "boo-blog"
+import (
+	blog "boo-blog"
+	"log"
+)
 
 func main() {
 	blogger := blog.NewBlogger("./http.ini")
 	blogger.HandleQuitEvent()
-	blogger.StartHttp()
+	if err := blogger.StartHttp(); err != nil {
+		log.Fatal(err)
+	}
 }
