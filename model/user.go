@@ -6,7 +6,6 @@ import (
 	"github.com/google/uuid"
 	helpers "github.com/yang-zzhong/go-helpers"
 	model "github.com/yang-zzhong/go-model"
-	"log"
 	"time"
 )
 
@@ -32,9 +31,6 @@ func (user *User) TableName() string {
 func (user *User) Encrypt(str string) string {
 	md5Sumb := md5.Sum(([]byte)(str + user.Salt))
 	result := hex.EncodeToString(md5Sumb[:])
-	log.Printf("salt: %s", user.Salt)
-	log.Printf("password: %s", str)
-	log.Printf("result: %s", result)
 	return result
 }
 

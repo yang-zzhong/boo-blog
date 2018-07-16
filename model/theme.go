@@ -14,7 +14,7 @@ type Theme struct {
 	UserId    uint32                 `db:"user_id bigint"`
 	Name      string                 `db:"name varchar(128)"`
 	Content   map[string]interface{} `db:"content longtext"`
-	CreatedAt time.Time              `db:"created_at"`
+	CreatedAt time.Time              `db:"created_at datetime"`
 	*model.Base
 }
 
