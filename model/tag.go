@@ -24,6 +24,10 @@ func NewTag() *Tag {
 	tag.DeclareOne("user", new(User), map[string]string{
 		"user_id": "id",
 	})
+	tag.OnUpdate(func(t interface{}) error {
+		t.(*Tag).UpdatedAt = time.Now()
+		return nil
+	})
 
 	return tag
 }

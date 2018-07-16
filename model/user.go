@@ -17,6 +17,7 @@ type User struct {
 	EmailAddr       string    `db:"email_addr varchar(128) nil"`
 	PhoneNumber     string    `db:"phone_number varchar(128) nil"`
 	PortraitImageId string    `db:"portrait_image_id varchar(32) nil"`
+	ThemeId         uint32    `db:"theme_id bigint nil"`
 	Password        string    `db:"password varchar(128) protected"`
 	Salt            string    `db:"salt char(8) protected"`
 	CreatedAt       time.Time `db:"created_at datetime"`
@@ -48,8 +49,14 @@ func NewUser() *User {
 	user.DeclareMany("cates", new(Cate), map[string]string{
 		"id": "user_id",
 	})
-	user.DeclareOne("theme", new(Theme), map[string]string{
+	user.DeclareOne("current_theme", new(Theme), map[string]string{
+		"theme_id": "id",
+	})
+	user.DeclareMoney("themes", new(Theme), map[string]string{
 		"id": "user_id",
+	})
+	user.OnUpdate(func(u interface{}) error {
+		u.(*User).UpdatedAt = time.Now()
 	})
 	return user
 }

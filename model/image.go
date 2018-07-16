@@ -146,6 +146,10 @@ func NewImage() *Image {
 	image.DeclareMany("user_images", new(UserImage), map[string]string{
 		"hash": "hash",
 	})
+	image.OnUpdate(func(img interface{}) error {
+		img.(*Image).UpdatedAt = time.Now()
+		return nil
+	})
 
 	return image
 }
@@ -153,5 +157,6 @@ func NewImage() *Image {
 func (image *Image) Instance() *Image {
 	image.CreatedAt = time.Now()
 	image.UpdatedAt = time.Now()
+
 	return image
 }

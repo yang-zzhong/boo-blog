@@ -47,6 +47,10 @@ func NewUserImage() *UserImage {
 	ui.DeclareOne("cate", new(Cate), map[string]string{
 		"group_id": "id",
 	})
+	ui.OnUpdate(func(u interface{}) error {
+		u.(*UserImage).UpdatedAt = time.Now()
+		return nil
+	})
 
 	return ui
 }
