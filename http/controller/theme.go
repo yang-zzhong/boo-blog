@@ -9,6 +9,10 @@ import (
 
 type Theme struct{ *Controller }
 
+func (this *Theme) Find(p *helpers.P) {
+
+}
+
 func (this *Theme) Create(req *httprouter.Request, p *helpers.P) {
 	theme := model.NewTheme().Instance()
 	theme.Fill(map[string]interface{}{
@@ -16,9 +20,9 @@ func (this *Theme) Create(req *httprouter.Request, p *helpers.P) {
 		"content": req.FormMap("content"),
 	})
 	theme.Repo().Where("name", theme.Name).Where("user_id", p.Get("visitor_id"))
-	if exists, err := theme.Count(); err != nil {
+	if exists, err := theme.Repo().Count(); err != nil {
 		this.InternalError(err)
-	} else if exists {
+	} else if exists != 0 {
 		this.String("该主题已存在", 500)
 	}
 	if err := theme.Save(); err != nil {
@@ -47,9 +51,9 @@ func (this *Theme) Update(req *httprouter.Request, p *helpers.P) {
 		Where("name", theme.Name).
 		Where("user_id", p.Get("visitor_id")).
 		Where("id", NEQ, theme.Id)
-	if exists, err := theme.Count(); err != nil {
+	if exists, err := theme.Repo().Count(); err != nil {
 		this.InternalError(err)
-	} else if exists {
+	} else if exists != 0 {
 		this.String("该主题已存在", 500)
 	}
 	if err := theme.Save(); err != nil {

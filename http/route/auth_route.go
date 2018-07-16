@@ -7,6 +7,25 @@ import (
 	. "net/http"
 )
 
+func registerThemeAuthRoutes(router *httprouter.Router) {
+	router.Post("/themes", func(w ResponseWriter, req *httprouter.Request, p *P) {
+		theme := &controller.Theme{controller.NewController(w)}
+		theme.Create(req, p)
+	})
+	router.Get("/themes", func(w ResponseWriter, req *httprouter.Request, p *P) {
+		theme := &controller.Theme{controller.NewController(w)}
+		theme.Find(p)
+	})
+	router.Put("/themes/:theme_id", func(w ResponseWriter, req *httprouter.Request, p *P) {
+		theme := &controller.Theme{controller.NewController(w)}
+		theme.Update(req, p)
+	})
+	router.Delete("/themes/:theme_id", func(w ResponseWriter, _ *httprouter.Request, p *P) {
+		theme := &controller.Theme{controller.NewController(w)}
+		theme.Delete(p)
+	})
+}
+
 func registerBlogAuthRoutes(router *httprouter.Router) {
 	router.Post("/blogs", func(w ResponseWriter, req *httprouter.Request, p *P) {
 		blog := &controller.Article{controller.NewController(w)}

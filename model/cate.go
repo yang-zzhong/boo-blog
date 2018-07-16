@@ -47,7 +47,7 @@ func NewCate() *Cate {
 	cate.DeclareMany("blogs", new(Blog), map[string]string{
 		"id": "cate_id",
 	})
-	ig.OnUpdate(func(i interface{}) error {
+	cate.OnUpdate(func(i interface{}) error {
 		i.(*Cate).UpdatedAt = time.Now()
 		return nil
 	})

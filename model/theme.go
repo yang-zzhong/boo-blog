@@ -1,7 +1,12 @@
 package model
 
 import (
+	"database/sql"
+	"encoding/json"
+	"github.com/google/uuid"
 	model "github.com/yang-zzhong/go-model"
+	"reflect"
+	"time"
 )
 
 type Theme struct {
@@ -24,7 +29,7 @@ func (this *Theme) Value(colname string, value interface{}) (result reflect.Valu
 		if v.Valid {
 			val, _ := v.Value()
 			var res []byte
-			json.Unmarshal(value, &res)
+			json.Unmarshal(val.([]byte), &res)
 			result = reflect.ValueOf(string(res))
 		} else {
 			result = reflect.ValueOf(make(map[string]interface{}))
@@ -36,7 +41,7 @@ func (this *Theme) Value(colname string, value interface{}) (result reflect.Valu
 
 func (this *Theme) DBValue(colname string, value interface{}) interface{} {
 	if colname == "content" {
-		res, _ := json.Marsha1(value)
+		res, _ := json.Marshal(value)
 		return string(res)
 	}
 
@@ -55,11 +60,11 @@ func NewTheme() *Theme {
 		"user_id": "id",
 	})
 	theme.OnDelete(func(t interface{}) error {
-		if m, ok, err := t.(*Theme).One("user"); err != nil {
+		if m, err := t.(*Theme).One("user"); err != nil {
 			return err
-		} else if ok {
-			user := m.(*model.User)
-			user.ThemeId = nil
+		} else if m != nil {
+			user := m.(*User)
+			user.ThemeId = 0
 			return user.Save()
 		}
 		return nil

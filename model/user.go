@@ -52,11 +52,12 @@ func NewUser() *User {
 	user.DeclareOne("current_theme", new(Theme), map[string]string{
 		"theme_id": "id",
 	})
-	user.DeclareMoney("themes", new(Theme), map[string]string{
+	user.DeclareMany("themes", new(Theme), map[string]string{
 		"id": "user_id",
 	})
 	user.OnUpdate(func(u interface{}) error {
 		u.(*User).UpdatedAt = time.Now()
+		return nil
 	})
 	return user
 }
