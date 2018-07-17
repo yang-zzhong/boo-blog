@@ -8,6 +8,10 @@ import (
 )
 
 func registerThemeAuthRoutes(router *httprouter.Router) {
+	router.Post("/applied-themes", func(w ResponseWriter, req *httprouter.Request, p *P) {
+		theme := &controller.Theme{controller.NewController(w)}
+		theme.Apply(req, p)
+	})
 	router.Post("/themes", func(w ResponseWriter, req *httprouter.Request, p *P) {
 		theme := &controller.Theme{controller.NewController(w)}
 		theme.Create(req, p)

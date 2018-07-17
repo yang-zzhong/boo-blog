@@ -3,10 +3,7 @@ package controller
 import (
 	"boo-blog/http/session"
 	"boo-blog/model"
-	// "context"
-	// "database/sql"
 	httprouter "github.com/yang-zzhong/go-httprouter"
-	// m "github.com/yang-zzhong/go-model"
 )
 
 type Login struct{ *Controller }
@@ -44,9 +41,6 @@ func (this *Login) Register(req *httprouter.Request) {
 	if err := user.Save(); err != nil {
 		this.InternalError(err)
 	}
-	// if err := this.CreateUser(user); err != nil {
-	// 	this.InternalError(err)
-	// }
 }
 
 func (this *Login) Login(req *httprouter.Request) {
@@ -86,21 +80,3 @@ func (this *Login) Login(req *httprouter.Request) {
 func (this *Login) Logout(req *httprouter.Request) {
 	session.Del(req.Header.Get("id"))
 }
-
-// func (this *Login) CreateUser(user *model.User) error {
-// 	ctx, cancel := context.WithCancel(context.Background())
-// 	defer cancel()
-// 	return m.Conn.Tx(func(tx *sql.Tx) error {
-// 		if err := user.Repo().WithTx(tx).Create(user); err != nil {
-// 			return err
-// 		}
-// 		user.Repo().WithoutTx()
-// 		theme := model.NewTheme()
-// 		theme.UserId = user.Id
-// 		theme.Name = user.Name + "的博客"
-// 		err := theme.Repo().WithTx(tx).Create(theme)
-// 		theme.Repo().WithoutTx()
-//
-// 		return err
-// 	}, ctx, nil)
-// }

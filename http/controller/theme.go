@@ -16,11 +16,28 @@ func (this *Theme) Find(p *helpers.P) {
 	if res, err := theme.Repo().Fetch(); err != nil {
 		this.InternalError(err)
 	} else {
-		result := []*model.Theme{}
+		visitor := p.Get("visitor").(*model.User)
+		result := []map[string]interface{}{}
 		for _, item := range res {
-			result = append(result, item.(*model.Theme))
+			theme := item.(*model.Theme)
+			i := theme.Map()
+			if theme.Id == visitor.ThemeId {
+				i["applied"] = 1
+			} else {
+				i["applied"] = 0
+			}
+			result = append(result, i)
 		}
 		this.Json(result, 200)
+	}
+}
+
+func (this *Theme) Apply(req *httprouter.Request, p *helpers.P) {
+	user := p.Get("visitor").(*model.User)
+	user.ThemeId = uint32(req.FormInt("theme_id"))
+
+	if err := user.Save(); err != nil {
+		this.InternalError(err)
 	}
 }
 
