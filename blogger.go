@@ -120,7 +120,7 @@ func (blogger *Blogger) CreateTable() error {
 				return err
 			}
 		}
-
+		Conn.Exec("SET @@global.sql_mode='NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'")
 	}
 	return nil
 }

@@ -4,6 +4,7 @@ import (
 	"boo-blog/model"
 	helpers "github.com/yang-zzhong/go-helpers"
 	httprouter "github.com/yang-zzhong/go-httprouter"
+	. "github.com/yang-zzhong/go-querybuilder"
 )
 
 type User struct{ *Controller }
@@ -41,36 +42,25 @@ func (this *User) SaveUserInfo(req *httprouter.Request, p *helpers.P) {
 	} else {
 		user = m.(*model.User)
 	}
-	user.PortraitImageId = req.FormValue("portrait_image_id")
+	if req.FormValue("portrait_image_id") != "" {
+		user.PortraitImageId = req.FormValue("portrait_image_id")
+	}
+	if req.FormValue("blog_name") != "" {
+		user.BlogName = req.FormValue("blog_name")
+	}
+	if req.FormValue("name") != "" {
+		user.Repo().Where("name", user.Name).Where("id", NEQ, p.Get("visitor_id"))
+		if exists, err := user.Repo().Count(); err != nil {
+			this.InternalError(err)
+			return
+		} else if exists > 0 {
+			this.String("名字已存在", 500)
+			return
+		} else {
+			user.Name = req.FormValue("name")
+		}
+	}
 	if err := user.Save(); err != nil {
-		this.InternalError(err)
-	}
-}
-
-func (this *User) SaveBlogInfo(req *httprouter.Request, p *helpers.P) {
-	theme := model.NewTheme()
-	if m, exist, err := theme.Repo().Find(p.Get("visitor_id")); err != nil {
-		this.InternalError(err)
-	} else if !exist {
-		theme.UserId = p.Get("visitor_id").(uint32)
-	} else {
-		theme = m.(*model.Theme)
-	}
-	data := map[string]interface{}{
-		"name":               req.FormValue("blog_name"),
-		"header_bg_image_id": req.FormValue("header_bg_image_id"),
-		"info_bg_image_id":   req.FormValue("info_bg_image_id"),
-		"bg_color":           req.FormValue("bg_color"),
-		"fg_color":           req.FormValue("fg_color"),
-		"tag_fg_color":       req.FormValue("tag_fg_color"),
-		"tag_bg_color":       req.FormValue("tag_bg_color"),
-		"header_bg_color":    req.FormValue("header_bg_color"),
-		"header_fg_color":    req.FormValue("header_fg_color"),
-		"paper_bg_color":     req.FormValue("paper_bg_color"),
-		"paper_fg_color":     req.FormValue("paper_fg_color"),
-	}
-	theme.Fill(data)
-	if err := theme.Save(); err != nil {
 		this.InternalError(err)
 	}
 }

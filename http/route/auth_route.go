@@ -57,10 +57,6 @@ func registerImageAuthRoutes(router *httprouter.Router) {
 }
 
 func registerBlogInfoRoutes(router *httprouter.Router) {
-	router.Post("/blog-info", func(w ResponseWriter, req *httprouter.Request, p *P) {
-		user := &controller.User{controller.NewController(w)}
-		user.SaveBlogInfo(req, p)
-	})
 	router.Post("/user-info", func(w ResponseWriter, req *httprouter.Request, p *P) {
 		user := &controller.User{controller.NewController(w)}
 		user.SaveUserInfo(req, p)

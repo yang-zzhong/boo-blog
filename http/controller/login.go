@@ -21,6 +21,7 @@ func (this *Login) Register(req *httprouter.Request) {
 	user.Fill(map[string]interface{}{
 		"name":       req.FormValue("name"),
 		"nickname":   req.FormValue("name"),
+		"blog_name":  req.FormValue("name") + "的博客",
 		"email_addr": req.FormValue("email_addr"),
 	})
 	user.Password = user.Encrypt(req.FormValue("password"))

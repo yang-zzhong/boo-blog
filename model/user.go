@@ -13,9 +13,13 @@ type User struct {
 	Id              uint32    `db:"id bigint pk"`
 	Name            string    `db:"name varchar(128) uk"`
 	NickName        string    `db:"nickname varchar(128) nil"`
+	BlogName        string    `db:"blog_name varchar(64)"`
 	EmailAddr       string    `db:"email_addr varchar(128) nil"`
+	EmailAddrAuthed bool      `db:"email_addr_authed smallint"`
 	PhoneNumber     string    `db:"phone_number varchar(128) nil"`
+	PhoneAuthed     bool      `db:"phone_number_authed smallint"`
 	PortraitImageId string    `db:"portrait_image_id varchar(32) nil"`
+	Bio             string    `db:"bio varchar(512) nil"`
 	ThemeId         uint32    `db:"theme_id bigint nil"`
 	Password        string    `db:"password varchar(128) protected"`
 	Salt            string    `db:"salt char(8) protected"`
