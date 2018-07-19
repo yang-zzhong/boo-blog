@@ -21,8 +21,10 @@ func (this *Image) Find(req *httprouter.Request) {
 	if userId := req.FormValue("user_id"); userId != "" {
 		userImage.Repo().Where("user_id", userId)
 	}
-	if groupId := req.FormValue("group_id"); groupId != "" {
-		userImage.Repo().Where("group_id", groupId)
+	if cateId := req.FormValue("cate_id"); cateId != "" {
+		userImage.Repo().Where("cate_id", cateId)
+	} else {
+		userImage.Repo().Where("cate_id", 0)
 	}
 	if page := req.FormInt("page"); page != 0 {
 		pageSize := req.FormInt("page_size")
