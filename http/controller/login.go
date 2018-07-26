@@ -70,11 +70,9 @@ func (this *Login) Login(req *httprouter.Request) {
 	if id, err := session.Save(user); err != nil {
 		this.InternalError(err)
 	} else {
-		this.Json(map[string]interface{}{
-			"sId":  id,
-			"id":   user.Id,
-			"name": user.Name,
-		}, 200)
+		profile := user.Profile()
+		profile["sId"] = id
+		this.Json(profile, 200)
 	}
 }
 

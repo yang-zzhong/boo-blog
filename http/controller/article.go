@@ -32,13 +32,30 @@ func (this *Article) Find(req *httprouter.Request) {
 		blog.Repo().Page(int(p), int(ps))
 	}
 	blog.Repo().OrderBy("created_at", DESC)
+	if req.FormValue("with-author") == "1" {
+		blog.Repo().With("author")
+	}
 	if items, err := blog.Repo().Fetch(); err != nil {
 		this.InternalError(err)
 		return
 	} else {
-		result := []*model.Blog{}
-		for _, item := range items {
-			result = append(result, item.(*model.Blog))
+		result := []map[string]interface{}{}
+		for _, m := range items {
+			item := m.(*model.Blog).Map()
+			if req.FormValue("with-author") != "1" {
+				result = append(result, item)
+				continue
+			}
+			if author, err := m.(*model.Blog).One("author"); err != nil {
+				this.InternalError(err)
+				return
+			} else if author == nil {
+				this.String("系统错误", 500)
+				return
+			} else {
+				item["author"] = author.(*model.User).Map()
+				result = append(result, item)
+			}
 		}
 		this.Json(result, 200)
 	}

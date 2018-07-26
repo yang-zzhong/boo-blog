@@ -55,6 +55,10 @@ func registerTagPublicRoutes(router *httprouter.Router) {
 }
 
 func registerUserPublicRoutes(router *httprouter.Router) {
+	router.Get("/users/:user_id/profile", func(w ResponseWriter, _ *httprouter.Request, p *P) {
+		user := &controller.User{controller.NewController(w)}
+		user.Profile(p)
+	})
 	router.Get("/users/:name", func(w ResponseWriter, req *httprouter.Request, p *P) {
 		user := &controller.User{controller.NewController(w)}
 		user.One(req, p)

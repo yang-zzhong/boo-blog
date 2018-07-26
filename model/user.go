@@ -62,6 +62,24 @@ func NewUser() *User {
 	return user
 }
 
+func (user *User) Profile() map[string]interface{} {
+	result := map[string]interface{}{
+		"id":                user.Id,
+		"name":              user.Name,
+		"portrait_image_id": user.PortraitImageId,
+	}
+	if m, err := user.One("current_theme"); err != nil {
+		return result
+	} else if m != nil {
+		theme := m.(*Theme)
+		result["user_info_bg_image_id"] = theme.Content["user_info_bg_image_id"]
+		result["user_info_bg_color"] = theme.Content["user_info_bg_color"]
+		result["user_info_fg_color"] = theme.Content["user_info_fg_color"]
+	}
+
+	return result
+}
+
 func (user *User) Instance() *User {
 	user.Salt = helpers.RandString(8)
 	user.Id = uuid.New().ID()

@@ -9,6 +9,19 @@ import (
 
 type User struct{ *Controller }
 
+func (this *User) Profile(p *helpers.P) {
+	user := model.NewUser()
+	if m, exists, err := user.Repo().Find(p.Get("user_id")); err != nil {
+		this.InternalError(err)
+		return
+	} else if !exists {
+		this.String("用户未找到", 404)
+		return
+	} else {
+		this.Json(m.(*model.User).Profile(), 200)
+	}
+}
+
 func (this *User) One(req *httprouter.Request, p *helpers.P) {
 	user := model.NewUser()
 	user.Repo().With("current_theme").Where("name", p.Get("name"))
