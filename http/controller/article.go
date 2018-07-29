@@ -5,6 +5,7 @@ import (
 	helpers "github.com/yang-zzhong/go-helpers"
 	httprouter "github.com/yang-zzhong/go-httprouter"
 	. "github.com/yang-zzhong/go-querybuilder"
+	"log"
 )
 
 type Article struct{ *Controller }
@@ -51,6 +52,7 @@ func (this *Article) Find(req *httprouter.Request) {
 				result = append(result, item)
 				continue
 			}
+			log.Print(m)
 			if author, err := m.(*model.Blog).One("author"); err != nil {
 				this.InternalError(err)
 				return

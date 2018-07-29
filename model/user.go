@@ -19,6 +19,9 @@ type User struct {
 	PhoneNumber     string    `db:"phone_number varchar(128) nil"`
 	PhoneAuthed     bool      `db:"phone_number_authed smallint"`
 	PortraitImageId string    `db:"portrait_image_id varchar(32) nil"`
+	Blogs           int       `db:"blogs int nil"`
+	Followed        int       `db:"followed int nil"`
+	FollowedBy      int       `db:"followed_by int nil"`
 	Bio             string    `db:"bio varchar(512) nil"`
 	ThemeId         uint32    `db:"theme_id bigint nil"`
 	Password        string    `db:"password varchar(128) protected"`
@@ -42,6 +45,12 @@ func NewUser() *User {
 	user := model.NewModel(new(User)).(*User)
 	user.DeclareMany("blogs", new(Blog), map[string]string{
 		"id": "user_id",
+	})
+	user.DeclareMany("followed_by", new(UserFollow), map[string]string{
+		"id": "user_id",
+	})
+	user.DeclareMany("followed", new(UserFollow), map[string]string{
+		"id": "followed_by",
 	})
 	user.DeclareMany("images", new(UserImage), map[string]string{
 		"id": "user_id",
