@@ -31,6 +31,20 @@ func registerThemeAuthRoutes(router *httprouter.Router) {
 }
 
 func registerBlogAuthRoutes(router *httprouter.Router) {
+	router.Post("/blogs/:blog_id/thumb-up", func(w ResponseWriter, _ *httprouter.Request, p *P) {
+		vote := &controller.Vote{controller.NewController(w)}
+		p.Set("vote", 1)
+		vote.Create(p)
+	})
+	router.Post("/blogs/:blog_id/thumb-down", func(w ResponseWriter, _ *httprouter.Request, p *P) {
+		vote := &controller.Vote{controller.NewController(w)}
+		p.Set("vote", -1)
+		vote.Create(p)
+	})
+	router.Post("/blogs/:blog_id/unthumb", func(w ResponseWriter, _ *httprouter.Request, p *P) {
+		vote := &controller.Vote{controller.NewController(w)}
+		vote.Delete(p)
+	})
 	router.Post("/blogs", func(w ResponseWriter, req *httprouter.Request, p *P) {
 		blog := &controller.Article{controller.NewController(w)}
 		blog.Create(req, p)

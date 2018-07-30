@@ -50,8 +50,8 @@ func (this *Theme) Instance() *Theme {
 
 func NewTheme() *Theme {
 	theme := model.NewModel(new(Theme)).(*Theme)
-	theme.DeclareOne("user", new(User), map[string]string{
-		"user_id": "id",
+	theme.DeclareOne("user", new(User), model.Nexus{
+		"id": "user_id",
 	})
 	theme.OnDelete(func(t interface{}) error {
 		if m, err := t.(*Theme).One("user"); err != nil {

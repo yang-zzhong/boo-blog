@@ -26,7 +26,14 @@ func (vote *Vote) TableName() string {
 }
 
 func NewVote() *Vote {
-	return model.NewModel(new(Vote)).(*Vote)
+	vote := model.NewModel(new(Vote)).(*Vote)
+	vote.DeclareOne("blog", new(Blog), model.Nexus{
+		"id": "target_id",
+	})
+	vote.DeclareOne("comment", new(Comment), model.Nexus{
+		"id": "target_id",
+	})
+	return vote
 }
 
 func (vote *Vote) Instance() *Vote {

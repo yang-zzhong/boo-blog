@@ -26,14 +26,14 @@ func (comment *Comment) TableName() string {
 
 func NewComment() *Comment {
 	comment := model.NewModel(new(Comment)).(*Comment)
-	comment.DeclareOne("user", new(User), map[string]string{
-		"user_id": "id",
+	comment.DeclareOne("user", new(User), model.Nexus{
+		"id": "user_id",
 	})
-	comment.DeclareOne("blog", new(Blog), map[string]string{
-		"blog_id": "id",
+	comment.DeclareOne("blog", new(Blog), model.Nexus{
+		"id": "blog_id",
 	})
-	comment.DeclareOne("reply", new(User), map[string]string{
-		"reply": "id",
+	comment.DeclareOne("reply", new(User), model.Nexus{
+		"id": "reply",
 	})
 	return comment
 }

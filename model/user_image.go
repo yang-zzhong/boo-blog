@@ -41,11 +41,11 @@ func (this *UserImage) Value(colname string, value interface{}) (result reflect.
 
 func NewUserImage() *UserImage {
 	ui := model.NewModel(new(UserImage)).(*UserImage)
-	ui.DeclareOne("image", new(Image), map[string]string{
+	ui.DeclareOne("image", new(Image), model.Nexus{
 		"hash": "hash",
 	})
-	ui.DeclareOne("cate", new(Cate), map[string]string{
-		"cate_id": "id",
+	ui.DeclareOne("cate", new(Cate), model.Nexus{
+		"id": "cate_id",
 	})
 	ui.OnUpdate(func(u interface{}) error {
 		u.(*UserImage).UpdatedAt = time.Now()

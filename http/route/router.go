@@ -21,12 +21,13 @@ func Router(docRoot string) *httprouter.Router {
 	}
 	ms := []httprouter.Middleware{
 		&middleware.UsedTime,
+		&middleware.AuthUser,
 		// &middleware.DB,
 		&middleware.AcrossDomain,
 	}
 	router.Group("/api", ms, func(router *httprouter.Router) {
 		registerPublicRoute(router)
-		router.Group("", []httprouter.Middleware{&middleware.AuthUser}, registerNeedAuthRoute)
+		router.Group("", []httprouter.Middleware{&middleware.MustAuthUser}, registerNeedAuthRoute)
 	})
 	return router
 }

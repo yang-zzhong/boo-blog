@@ -21,8 +21,8 @@ func (tag *Tag) TableName() string {
 
 func NewTag() *Tag {
 	tag := model.NewModel(new(Tag)).(*Tag)
-	tag.DeclareOne("user", new(User), map[string]string{
-		"user_id": "id",
+	tag.DeclareOne("user", new(User), model.Nexus{
+		"id": "user_id",
 	})
 	tag.OnUpdate(func(t interface{}) error {
 		t.(*Tag).UpdatedAt = time.Now()

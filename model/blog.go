@@ -3,6 +3,7 @@ package model
 import (
 	"github.com/google/uuid"
 	model "github.com/yang-zzhong/go-model"
+	. "github.com/yang-zzhong/go-querybuilder"
 	"golang.org/x/net/html"
 	"io/ioutil"
 	"log"
@@ -120,11 +121,21 @@ func (blog *Blog) Content() string {
 
 func NewBlog() *Blog {
 	blog := model.NewModel(new(Blog)).(*Blog)
-	blog.DeclareOne("author", new(User), map[string]string{
-		"user_id": "id",
+	blog.DeclareOne("author", new(User), model.Nexus{
+		"id": "user_id",
 	})
-	blog.DeclareOne("cate", new(Cate), map[string]string{
-		"cate_id": "id",
+	blog.DeclareOne("cate", new(Cate), model.Nexus{
+		"id": "cate_id",
+	})
+	blog.DeclareMany("thumb_up", new(Vote), model.Nexus{
+		"target_id":   "id",
+		"target_type": model.NWhere{EQ, VOTE_BLOG},
+		"vote":        model.NWhere{GT, 0},
+	})
+	blog.DeclareMany("thumb_down", new(Vote), model.Nexus{
+		"target_id":   "id",
+		"target_type": model.NWhere{EQ, VOTE_BLOG},
+		"vote":        model.NWhere{LT, 0},
 	})
 	blog.OnUpdate(func(b interface{}) error {
 		b.(*Blog).UpdatedAt = time.Now()

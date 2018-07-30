@@ -41,11 +41,11 @@ func (ig *Cate) Value(colname string, value interface{}) (result reflect.Value, 
 
 func NewCate() *Cate {
 	cate := model.NewModel(new(Cate)).(*Cate)
-	cate.DeclareOne("user", new(User), map[string]string{
-		"user_id": "id",
+	cate.DeclareOne("user", new(User), model.Nexus{
+		"id": "user_id",
 	})
-	cate.DeclareMany("blogs", new(Blog), map[string]string{
-		"id": "cate_id",
+	cate.DeclareMany("blogs", new(Blog), model.Nexus{
+		"cate_id": "id",
 	})
 	cate.OnUpdate(func(i interface{}) error {
 		i.(*Cate).UpdatedAt = time.Now()

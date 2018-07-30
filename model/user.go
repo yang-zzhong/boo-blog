@@ -43,26 +43,26 @@ func (user *User) Encrypt(str string) string {
 
 func NewUser() *User {
 	user := model.NewModel(new(User)).(*User)
-	user.DeclareMany("blogs", new(Blog), map[string]string{
-		"id": "user_id",
+	user.DeclareMany("blogs", new(Blog), model.Nexus{
+		"user_id": "id",
 	})
-	user.DeclareMany("followed_by", new(UserFollow), map[string]string{
-		"id": "user_id",
+	user.DeclareMany("followed_by", new(UserFollow), model.Nexus{
+		"user_id": "id",
 	})
-	user.DeclareMany("followed", new(UserFollow), map[string]string{
-		"id": "followed_by",
+	user.DeclareMany("followed", new(UserFollow), model.Nexus{
+		"followed_by": "id",
 	})
-	user.DeclareMany("images", new(UserImage), map[string]string{
-		"id": "user_id",
+	user.DeclareMany("images", new(UserImage), model.Nexus{
+		"user_id": "id",
 	})
-	user.DeclareMany("cates", new(Cate), map[string]string{
-		"id": "user_id",
+	user.DeclareMany("cates", new(Cate), model.Nexus{
+		"user_id": "id",
 	})
-	user.DeclareOne("current_theme", new(Theme), map[string]string{
-		"theme_id": "id",
+	user.DeclareOne("current_theme", new(Theme), model.Nexus{
+		"id": "theme_id",
 	})
-	user.DeclareMany("themes", new(Theme), map[string]string{
-		"id": "user_id",
+	user.DeclareMany("themes", new(Theme), model.Nexus{
+		"user_id": "id",
 	})
 	user.OnUpdate(func(u interface{}) error {
 		u.(*User).UpdatedAt = time.Now()

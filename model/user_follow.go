@@ -20,8 +20,8 @@ func (userFollow *UserFollow) TableName() string {
 
 func NewUserFollow() *UserFollow {
 	userFollow := model.NewModel(new(UserFollow)).(*UserFollow)
-	userFollow.DeclareOne("follow", new(User), map[string]string{
-		"user_id": "id",
+	userFollow.DeclareOne("follow", new(User), model.Nexus{
+		"id": "user_id",
 	})
 
 	return userFollow

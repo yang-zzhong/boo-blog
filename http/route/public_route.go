@@ -14,9 +14,9 @@ func registerBlogPublicRoutes(router *httprouter.Router) {
 		blog := &controller.Article{controller.NewController(w)}
 		blog.FetchUserBlog(req, p)
 	})
-	router.Get("/blogs", func(w ResponseWriter, req *httprouter.Request, _ *P) {
+	router.Get("/blogs", func(w ResponseWriter, req *httprouter.Request, p *P) {
 		blog := &controller.Article{controller.NewController(w)}
-		blog.Find(req)
+		blog.Find(req, p)
 	})
 	router.Get("/blogs/:id", func(w ResponseWriter, req *httprouter.Request, p *P) {
 		blog := &controller.Article{controller.NewController(w)}

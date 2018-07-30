@@ -48,15 +48,15 @@ func (this *Category) ImageUsed(req *httprouter.Request, p *helpers.P) {
 		GroupBy("cate_id")
 	var cateIds []interface{}
 	idCount := make(map[uint32]int)
-	var err error
-	image.Repo().Query(func(rows *sql.Rows, _ []string) {
+	err := image.Repo().Query(func(rows *sql.Rows, _ []string) error {
 		var id uint32
 		var quantity int
-		if err = rows.Scan(&id, &quantity); err != nil {
-			return
+		if err := rows.Scan(&id, &quantity); err != nil {
+			return err
 		}
 		cateIds = append(cateIds, id)
 		idCount[id] = quantity
+		return nil
 	})
 	if err != nil {
 		this.InternalError(err)
@@ -77,16 +77,20 @@ func (this *Category) ArticleUsed(req *httprouter.Request, p *helpers.P) {
 		GroupBy("cate_id")
 	var cateIds []interface{}
 	idCount := make(map[uint32]int)
-	var err error
-	blog.Repo().Query(func(rows *sql.Rows, _ []string) {
+	err := blog.Repo().Query(func(rows *sql.Rows, _ []string) error {
 		var id uint32
 		var quantity int
-		if err = rows.Scan(&id, &quantity); err != nil {
-			return
+		if err := rows.Scan(&id, &quantity); err != nil {
+			return err
 		}
 		cateIds = append(cateIds, id)
 		idCount[id] = quantity
+		return nil
 	})
+	if err != nil {
+		this.InternalError(err)
+		return
+	}
 	if len(cateIds) == 0 {
 		return
 	}

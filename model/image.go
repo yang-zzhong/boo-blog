@@ -143,7 +143,7 @@ func (image *Image) Resize(w io.Writer, width, height uint, interp resize.Interp
 
 func NewImage() *Image {
 	image := model.NewModel(new(Image)).(*Image)
-	image.DeclareMany("user_images", new(UserImage), map[string]string{
+	image.DeclareMany("user_images", new(UserImage), model.Nexus{
 		"hash": "hash",
 	})
 	image.OnUpdate(func(img interface{}) error {
