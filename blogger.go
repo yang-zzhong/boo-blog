@@ -105,6 +105,7 @@ func (blogger *Blogger) CreateTable() error {
 			model.NewImage().Repo(),
 			model.NewTheme().Repo(),
 			model.NewTag().Repo(),
+			model.NewUserFollow().Repo(),
 			model.NewUserImage().Repo(),
 			model.NewUser().Repo(),
 			model.NewComment().Repo(),

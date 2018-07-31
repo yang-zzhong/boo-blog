@@ -24,8 +24,6 @@ func (au *authUser) After(_ http.ResponseWriter, _ *httprouter.Request, _ *helpe
 	return true
 }
 
-var AuthUser authUser
-
 type mustAuthUser struct{}
 
 func (au *mustAuthUser) Before(w http.ResponseWriter, req *httprouter.Request, p *helpers.P) bool {
@@ -40,4 +38,7 @@ func (au *mustAuthUser) After(_ http.ResponseWriter, _ *httprouter.Request, _ *h
 	return true
 }
 
-var MustAuthUser mustAuthUser
+var (
+	AuthUser     authUser
+	MustAuthUser mustAuthUser
+)

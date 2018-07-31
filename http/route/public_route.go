@@ -63,9 +63,9 @@ func registerUserPublicRoutes(router *httprouter.Router) {
 		user := &controller.User{controller.NewController(w)}
 		user.One(req, p)
 	})
-	router.Get("/users", func(w ResponseWriter, req *httprouter.Request, _ *P) {
+	router.Get("/users", func(w ResponseWriter, req *httprouter.Request, p *P) {
 		user := &controller.User{controller.NewController(w)}
-		user.Find(req)
+		user.Find(req, p)
 	})
 	router.Post("/register", func(w ResponseWriter, req *httprouter.Request, _ *P) {
 		login := &controller.Login{controller.NewController(w)}

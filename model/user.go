@@ -20,8 +20,8 @@ type User struct {
 	PhoneAuthed     bool      `db:"phone_number_authed smallint"`
 	PortraitImageId string    `db:"portrait_image_id varchar(32) nil"`
 	Blogs           int       `db:"blogs int nil"`
-	Followed        int       `db:"followed int nil"`
-	FollowedBy      int       `db:"followed_by int nil"`
+	Followed        int       `db:"followed int"`
+	Following       int       `db:"following int"`
 	Bio             string    `db:"bio varchar(512) nil"`
 	ThemeId         uint32    `db:"theme_id bigint nil"`
 	Password        string    `db:"password varchar(128) protected"`
@@ -46,11 +46,11 @@ func NewUser() *User {
 	user.DeclareMany("blogs", new(Blog), model.Nexus{
 		"user_id": "id",
 	})
-	user.DeclareMany("followed_by", new(UserFollow), model.Nexus{
-		"user_id": "id",
-	})
 	user.DeclareMany("followed", new(UserFollow), model.Nexus{
-		"followed_by": "id",
+		"followed": "id",
+	})
+	user.DeclareMany("following", new(UserFollow), model.Nexus{
+		"user_id": "id",
 	})
 	user.DeclareMany("images", new(UserImage), model.Nexus{
 		"user_id": "id",
@@ -75,7 +75,11 @@ func (user *User) Profile() map[string]interface{} {
 	result := map[string]interface{}{
 		"id":                user.Id,
 		"name":              user.Name,
+		"bio":               user.Bio,
 		"portrait_image_id": user.PortraitImageId,
+		"blogs":             user.Blogs,
+		"followed":          user.Followed,
+		"following":         user.Following,
 	}
 	if m, err := user.One("current_theme"); err != nil {
 		return result

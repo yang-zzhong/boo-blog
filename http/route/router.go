@@ -33,6 +33,7 @@ func Router(docRoot string) *httprouter.Router {
 }
 
 func registerNeedAuthRoute(router *httprouter.Router) {
+	registerUserAuthRoutes(router)
 	registerBlogAuthRoutes(router)
 	registerImageAuthRoutes(router)
 	registerBlogInfoRoutes(router)

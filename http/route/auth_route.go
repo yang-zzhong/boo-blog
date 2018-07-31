@@ -30,6 +30,17 @@ func registerThemeAuthRoutes(router *httprouter.Router) {
 	})
 }
 
+func registerUserAuthRoutes(router *httprouter.Router) {
+	router.Post("/following/:user_id", func(w ResponseWriter, _ *httprouter.Request, p *P) {
+		follow := &controller.UserFollow{controller.NewController(w)}
+		follow.Follow(p)
+	})
+	router.Delete("/following/:user_id", func(w ResponseWriter, _ *httprouter.Request, p *P) {
+		follow := &controller.UserFollow{controller.NewController(w)}
+		follow.Unfollow(p)
+	})
+}
+
 func registerBlogAuthRoutes(router *httprouter.Router) {
 	router.Post("/blogs/:blog_id/thumb-up", func(w ResponseWriter, _ *httprouter.Request, p *P) {
 		vote := &controller.Vote{controller.NewController(w)}

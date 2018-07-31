@@ -9,7 +9,7 @@ import (
 type UserFollow struct {
 	Id         uint32    `db:"id bigint pk"`
 	UserId     uint32    `db:"user_id bigint"`
-	FollowedBy uint32    `db:"followed_by bigint"`
+	Followed   uint32    `db:"followed bigint"`
 	FollowedAt time.Time `db:"followed_at datetime"`
 	*model.Base
 }
@@ -20,8 +20,17 @@ func (userFollow *UserFollow) TableName() string {
 
 func NewUserFollow() *UserFollow {
 	userFollow := model.NewModel(new(UserFollow)).(*UserFollow)
-	userFollow.DeclareOne("follow", new(User), model.Nexus{
+	//
+	// followed关联的用户被谁关注
+	//
+	userFollow.DeclareOne("followed", new(User), model.Nexus{
 		"id": "user_id",
+	})
+	//
+	// user_id关联的用户关注的用户
+	//
+	userFollow.DeclareOne("following", new(User), model.Nexus{
+		"id": "followed",
 	})
 
 	return userFollow
