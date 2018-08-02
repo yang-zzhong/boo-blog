@@ -104,9 +104,11 @@ func (this *Article) GetOne(req *httprouter.Request, p *helpers.P) {
 	} else if !ok {
 		this.String("文章没找到", 404)
 	} else {
-		if d, err := detail(i.(*model.Blog), p.Get("visitor_id")); err != nil {
+		blog = i.(*model.Blog)
+		if d, err := detail(blog, p.Get("visitor_id")); err != nil {
 			this.InternalError(err)
 		} else {
+			d["content"] = blog.Content()
 			this.Json(d, 200)
 		}
 	}
