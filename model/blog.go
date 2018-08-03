@@ -15,19 +15,22 @@ import (
 )
 
 type Blog struct {
-	Id        uint32    `db:"id bigint pk"`
-	Title     string    `db:"title varchar(256)"`
-	Overview  string    `db:"overview text"`
-	Image     string    `db:"image varchar(1024)"`
-	UrlId     string    `db:"url_id varchar(256)"`
-	UserId    uint32    `db:"user_id bigint"`
-	CateId    uint32    `db:"cate_id bigint nil"`
-	Tags      []string  `db:"tags varchar(256) nil"`
-	Comments  int       `db:"comments int"`
-	ThumbUp   int       `db:"thumb_up int"`
-	ThumbDown int       `db:"thumb_down int"`
-	CreatedAt time.Time `db:"created_at datetime"`
-	UpdatedAt time.Time `db:"updated_at datetime"`
+	Id           uint32    `db:"id bigint pk"`
+	Title        string    `db:"title varchar(256)"`
+	Overview     string    `db:"overview text"`
+	Image        string    `db:"image varchar(1024)"`
+	UrlId        string    `db:"url_id varchar(256)"`
+	UserId       uint32    `db:"user_id bigint"`
+	CateId       uint32    `db:"cate_id bigint nil"`
+	Tags         []string  `db:"tags json nil"`
+	Comments     int       `db:"comments int"`
+	ThumbUp      int       `db:"thumb_up int"`
+	ThumbDown    int       `db:"thumb_down int"`
+	AllowComment bool      `db:"allow_comment smallint"`
+	AllowThumb   bool      `db:"allow_thumb smallint"`
+	Privilege    string    `db:"privilege varchar(32)"`
+	CreatedAt    time.Time `db:"created_at datetime"`
+	UpdatedAt    time.Time `db:"updated_at datetime"`
 	*model.Base
 }
 

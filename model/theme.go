@@ -12,7 +12,7 @@ type Theme struct {
 	Id        uint32            `db:"id bigint pk"`
 	UserId    uint32            `db:"user_id bigint"`
 	Name      string            `db:"name varchar(128)"`
-	Content   map[string]string `db:"content longtext"`
+	Content   map[string]string `db:"content json"`
 	CreatedAt time.Time         `db:"created_at datetime"`
 	*model.Base
 }

@@ -2,6 +2,7 @@ package model
 
 import (
 	"database/sql"
+	"encoding/json"
 	_ "github.com/go-sql-driver/mysql"
 	m "github.com/yang-zzhong/go-model"
 	query "github.com/yang-zzhong/go-querybuilder"
@@ -79,15 +80,17 @@ func dsn() string {
 }
 
 func nullArrayDBValue(value interface{}) interface{} {
-	result := strings.Join(value.([]string), ",")
+	result, err := json.Marshal(value)
 	return result
 }
 
 func nullArrayValue(value interface{}) (result reflect.Value) {
 	v := value.(sql.NullString)
 	if v.Valid {
-		val, _ := v.Value()
-		result = reflect.ValueOf(strings.Split(val.(string), ","))
+		val, _ := v.Value().(string)
+		r := []string{}
+		json.Unmarshal([]byte(val), &r)
+		result = reflect.ValueOf(r)
 	} else {
 		result = reflect.ValueOf([]string{})
 	}

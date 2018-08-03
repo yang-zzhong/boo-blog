@@ -12,7 +12,7 @@ type UserImage struct {
 	UserId    uint32    `db:"user_id bigint"`
 	Hash      string    `db:"hash char(32)"`
 	CateId    uint32    `db:"cate_id bigint nil"`
-	Tags      []string  `db:"tags varchar(256) nil"`
+	Tags      []string  `db:"tags json nil"`
 	CreatedAt time.Time `db:"created_at datetime"`
 	UpdatedAt time.Time `db:"updated_at datetime"`
 	*model.Base
