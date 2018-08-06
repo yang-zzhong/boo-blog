@@ -3,11 +3,23 @@ package model
 import (
 	"database/sql"
 	"encoding/json"
-	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/lib/pq"
+	// _ "github.com/go-sql-driver/mysql"
 	m "github.com/yang-zzhong/go-model"
 	query "github.com/yang-zzhong/go-querybuilder"
+	"log"
 	"os"
 	"reflect"
+)
+
+// mysql type
+// const (
+// 	TYPE_DATETIME = "datetime"
+// )
+
+// pgsql type
+const (
+	TYPE_DATETIME = "timestamp"
 )
 
 type IdMaker interface {
@@ -34,10 +46,19 @@ func InitDriver(config *Config) {
 }
 
 func OpenDB() error {
-	if db, err := sql.Open(conf.Driver, dsn()); err != nil {
+	dsn := ""
+	switch conf.Driver {
+	case "mysql":
+		dsn = mysqldsn()
+	case "postgres":
+		dsn = pgsqldsn()
+	default:
+		panic("database not supported")
+	}
+	if db, err := sql.Open(conf.Driver, dsn); err != nil {
 		return err
 	} else {
-		m.Config(db, &query.MysqlModifier{})
+		m.Config(db, &query.PgsqlModifier{})
 	}
 	return nil
 }
@@ -65,7 +86,7 @@ func sureDir(dir string) {
 	}
 }
 
-func dsn() string {
+func mysqldsn() string {
 	dsn := conf.Username + ":" + conf.Password + "@"
 	if conf.Host != "" {
 		dsn += "tcp(" + conf.Host
@@ -78,17 +99,31 @@ func dsn() string {
 	return dsn
 }
 
+func pgsqldsn() string {
+	dsn := "postgres://" + conf.Username + ":" + conf.Password + "@" + conf.Host + ":" + conf.Port + "/" + conf.Database
+	log.Print(dsn)
+	return dsn
+}
+
 func nullArrayDBValue(value interface{}) interface{} {
-	result, _ := json.Marshal(value)
-	return string(result)
+	val := value.([]string)
+	if len(val) > 0 {
+		return "{'" + strings.Join(value.([]string), "'}, {'") + "'}"
+	} else {
+		return "{}"
+	}
 }
 
 func nullArrayValue(value interface{}) (result reflect.Value) {
 	v := value.(sql.NullString)
 	if v.Valid {
 		val, _ := v.Value()
-		r := []string{}
-		json.Unmarshal([]byte(val.(string)), &r)
+		val = strings.TrimPrefix(val, "{'")
+		val = strings.TrimSuffix(val, "'}")
+		r := strings.Split(val, "'}, {'")
+		if len(r) == 0 {
+			return reflect.ValueOf([]string{})
+		}
 		result = reflect.ValueOf(r)
 	} else {
 		result = reflect.ValueOf([]string{})

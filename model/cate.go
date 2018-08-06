@@ -12,9 +12,9 @@ type Cate struct {
 	Name      string    `db:"name varchar(64)"`
 	Intro     string    `db:"intro varchar(512) nil"`
 	UserId    uint32    `db:"user_id bigint"`
-	Tags      []string  `db:"tags json nil"`
-	CreatedAt time.Time `db:"created_at datetime"`
-	UpdatedAt time.Time `db:"updated_at datetime"`
+	Tags      []string  `db:"tags varchar(32)[] nil"`
+	CreatedAt time.Time `db:"created_at timestamp"`
+	UpdatedAt time.Time `db:"updated_at timestamp"`
 	*model.Base
 }
 

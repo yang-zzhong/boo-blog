@@ -22,15 +22,15 @@ type Blog struct {
 	UrlId        string    `db:"url_id varchar(256)"`
 	UserId       uint32    `db:"user_id bigint"`
 	CateId       uint32    `db:"cate_id bigint nil"`
-	Tags         []string  `db:"tags json nil"`
+	Tags         []string  `db:"tags varchar(32)[] nil"`
 	Comments     int       `db:"comments int"`
 	ThumbUp      int       `db:"thumb_up int"`
 	ThumbDown    int       `db:"thumb_down int"`
-	AllowComment bool      `db:"allow_comment smallint"`
-	AllowThumb   bool      `db:"allow_thumb smallint"`
+	AllowComment bool      `db:"allow_comment bool"`
+	AllowThumb   bool      `db:"allow_thumb bool"`
 	Privilege    string    `db:"privilege varchar(32)"`
-	CreatedAt    time.Time `db:"created_at datetime"`
-	UpdatedAt    time.Time `db:"updated_at datetime"`
+	CreatedAt    time.Time `db:"created_at timestamp"`
+	UpdatedAt    time.Time `db:"updated_at timestamp"`
 	*model.Base
 }
 

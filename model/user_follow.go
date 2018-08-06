@@ -10,7 +10,7 @@ type UserFollow struct {
 	Id         uint32    `db:"id bigint pk"`
 	UserId     uint32    `db:"user_id bigint"`
 	Followed   uint32    `db:"followed bigint"`
-	FollowedAt time.Time `db:"followed_at datetime"`
+	FollowedAt time.Time `db:"followed_at timestamp"`
 	*model.Base
 }
 

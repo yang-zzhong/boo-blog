@@ -116,12 +116,12 @@ func (blogger *Blogger) CreateTable() error {
 				log.Print(err)
 				continue
 			}
-			s := "ALTER TABLE " + repo.QuotedTableName() + " CONVERT TO CHARACTER SET utf8mb4"
-			if _, err := Conn.Exec(s); err != nil {
-				return err
-			}
+			//s := "ALTER TABLE " + repo.QuotedTableName() + " CONVERT TO CHARACTER SET utf8mb4"
+			//if _, err := Conn.Exec(s); err != nil {
+			//	return err
+			//}
 		}
-		Conn.Exec("SET @@global.sql_mode='NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'")
+		// Conn.Exec("SET @@global.sql_mode='NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'")
 	}
 	return nil
 }

@@ -30,8 +30,8 @@ type Image struct {
 	Height    int       `db:"height int"`
 	Format    string    `db:"format varchar(64)"`
 	Size      int64     `db:"size int"`
-	CreatedAt time.Time `db:"created_at datetime"`
-	UpdatedAt time.Time `db:"updated_at datetime"`
+	CreatedAt time.Time `db:"created_at timestamp"`
+	UpdatedAt time.Time `db:"updated_at timestamp"`
 	*model.Base
 }
 

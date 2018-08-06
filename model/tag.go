@@ -10,8 +10,8 @@ type Tag struct {
 	Intro     string    `db:"intro varchar(256) nil"`
 	UserId    uint32    `db:"user_id bigint"`
 	IntroUrl  string    `db:"intro_url varchar(512) nil"`
-	CreatedAt time.Time `db:"created_at datetime"`
-	UpdatedAt time.Time `db:"updated_at datetime nil"`
+	CreatedAt time.Time `db:"created_at timestamp"`
+	UpdatedAt time.Time `db:"updated_at timestamp nil"`
 	*model.Base
 }
 

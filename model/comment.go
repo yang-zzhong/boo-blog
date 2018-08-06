@@ -9,14 +9,14 @@ import (
 
 type Comment struct {
 	Id             uint32    `db:"id bigint pk"`
-	Content        string    `db:"content longtext"`
+	Content        string    `db:"content text"`
 	UserId         uint32    `db:"user_id bigint"`
 	Reply          uint32    `db:"reply bigint"`
-	Ats            []string  `db:"ats text nil"`
+	Ats            []string  `db:"ats bigint[] nil"`
 	BlogId         uint32    `db:"blog_id bigint"`
 	CommentId      uint32    `db:"comment_Id bigint nil"`
 	CommentAllowed bool      `db:"comment_allowed int"`
-	CommentedAt    time.Time `db:"commented_at datetime"`
+	CommentedAt    time.Time `db:"commented_at timestamp"`
 	*model.Base
 }
 

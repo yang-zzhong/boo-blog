@@ -15,10 +15,9 @@ type User struct {
 	NickName        string    `db:"nickname varchar(128) nil"`
 	BlogName        string    `db:"blog_name varchar(64)"`
 	EmailAddr       string    `db:"email_addr varchar(128) nil"`
-	EmailAddrAuthed bool      `db:"email_addr_authed smallint"`
 	PhoneNumber     string    `db:"phone_number varchar(128) nil"`
-	PhoneAuthed     bool      `db:"phone_number_authed smallint"`
 	PortraitImageId string    `db:"portrait_image_id varchar(32) nil"`
+	EmailAddrAuthed bool      `db:"email_addr_authed boolean"`
 	Blogs           int       `db:"blogs int nil"`
 	Followed        int       `db:"followed int"`
 	Following       int       `db:"following int"`
@@ -26,8 +25,8 @@ type User struct {
 	ThemeId         uint32    `db:"theme_id bigint nil"`
 	Password        string    `db:"password varchar(128) protected"`
 	Salt            string    `db:"salt char(8) protected"`
-	CreatedAt       time.Time `db:"created_at datetime"`
-	UpdatedAt       time.Time `db:"updated_at datetime"`
+	CreatedAt       time.Time `db:"created_at timestamp"`
+	UpdatedAt       time.Time `db:"updated_at timestamp"`
 	*model.Base
 }
 

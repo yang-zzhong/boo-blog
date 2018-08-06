@@ -17,7 +17,7 @@ type Vote struct {
 	TargetType string    `db:"target_type varchar(16)"`
 	TargetId   uint32    `db:"target_id bigint"`
 	Vote       int8      `db:"vote smallint"`
-	VotedAt    time.Time `db:"voted_at datetime"`
+	VotedAt    time.Time `db:"voted_at timestamp"`
 	*model.Base
 }
 
