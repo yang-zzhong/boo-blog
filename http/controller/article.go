@@ -201,6 +201,7 @@ func (this *Article) Update(req *httprouter.Request, p *helpers.P) {
 	if err := blog.Save(); err != nil {
 		this.InternalError(err)
 	}
+	this.Json(blog, 200)
 }
 
 func (this *Article) Remove(req *httprouter.Request, p *helpers.P) {
@@ -220,6 +221,34 @@ func (this *Article) Remove(req *httprouter.Request, p *helpers.P) {
 	}
 	if err := blog.Delete(); err != nil {
 		this.InternalError(err)
+	}
+}
+
+func (this *Article) RemoveMany(req *httprouter.Request, p *helpers.P) {
+	blog := model.NewBlog()
+	ids := []interface{}{}
+	for _, id := range req.FormSlice("blog_ids") {
+		ids = append(ids, id)
+	}
+	if len(ids) == 0 {
+		this.String("请提交你需要删除的文章", 500)
+		return
+	}
+	blog.Repo().WhereIn("id", ids)
+	if bs, err := blog.Repo().Fetch(); err != nil {
+		this.InternalError(err)
+		return
+	} else {
+		for _, m := range bs {
+			if m.(*model.Blog).UserId != p.Get("visitor_id") {
+				this.String("你没有权限删除别人的文章", 500)
+				return
+			}
+		}
+		if err := blog.Repo().Delete(bs); err != nil {
+			this.InternalError(err)
+			return
+		}
 	}
 }
 

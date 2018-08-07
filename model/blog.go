@@ -6,7 +6,6 @@ import (
 	. "github.com/yang-zzhong/go-querybuilder"
 	"golang.org/x/net/html"
 	"io/ioutil"
-	"log"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -98,23 +97,27 @@ func (blog *Blog) WithOverview(content string) {
 		limit = 128
 	}
 	nodes = 0
+	overview := []rune{}
 	find(node, func(d *html.Node) bool {
 		if nodes > 300 {
 			return true
 		}
-		nodes++
-		if d.Type == html.TextNode && inblock(d) {
-			blog.Overview += strings.Trim(d.Data, " ")
+		if d.Type == html.ElementNode && (d.Data == "style" || d.Data == "code" || d.Data == "head") {
+			return false
 		}
-		if len(blog.Overview) > limit {
+		nodes++
+		if d.Type == html.TextNode {
+			overview = append(overview, []rune(d.Data)...)
+		}
+		if len(overview) > limit {
 			return true
 		}
 		return false
 	})
-	if len(blog.Overview) > limit {
-		blog.Overview = blog.Overview[0:limit]
+	if len(overview) > limit {
+		overview = overview[0:limit]
 	}
-	log.Printf("%v, %d", blog.Overview, len(blog.Overview))
+	blog.Overview = string(overview)
 }
 
 func (blog *Blog) Content() string {
@@ -169,16 +172,4 @@ func find(n *html.Node, call callback) bool {
 		w = find(c, call)
 	}
 	return w || d
-}
-
-func inblock(n *html.Node) bool {
-	node := n
-	for node != nil {
-		if node.Type == html.ElementNode && (node.Data == "style" || node.Data == "head" || node.Data == "code") {
-			return false
-		}
-		node = node.Parent
-	}
-
-	return true
 }

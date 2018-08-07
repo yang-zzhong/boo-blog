@@ -56,10 +56,6 @@ func registerBlogAuthRoutes(router *httprouter.Router) {
 		vote := &controller.Vote{controller.NewController(w)}
 		vote.Delete(p)
 	})
-	router.Post("/blogs", func(w ResponseWriter, req *httprouter.Request, p *P) {
-		blog := &controller.Article{controller.NewController(w)}
-		blog.Create(req, p)
-	})
 	router.Put("/blogs/:id", func(w ResponseWriter, req *httprouter.Request, p *P) {
 		blog := &controller.Article{controller.NewController(w)}
 		blog.Update(req, p)
@@ -71,6 +67,14 @@ func registerBlogAuthRoutes(router *httprouter.Router) {
 	router.Post("/blogs/:blog_id/comments", func(w ResponseWriter, req *httprouter.Request, p *P) {
 		comment := &controller.Comment{controller.NewController(w)}
 		comment.Create(req, p)
+	})
+	router.Post("/blogs", func(w ResponseWriter, req *httprouter.Request, p *P) {
+		blog := &controller.Article{controller.NewController(w)}
+		blog.Create(req, p)
+	})
+	router.Delete("/blogs", func(w ResponseWriter, req *httprouter.Request, p *P) {
+		blog := &controller.Article{controller.NewController(w)}
+		blog.RemoveMany(req, p)
 	})
 }
 

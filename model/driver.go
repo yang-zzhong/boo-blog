@@ -2,14 +2,13 @@ package model
 
 import (
 	"database/sql"
-	"encoding/json"
 	_ "github.com/lib/pq"
 	// _ "github.com/go-sql-driver/mysql"
 	m "github.com/yang-zzhong/go-model"
 	query "github.com/yang-zzhong/go-querybuilder"
-	"log"
 	"os"
 	"reflect"
+	"strings"
 )
 
 // mysql type
@@ -101,14 +100,13 @@ func mysqldsn() string {
 
 func pgsqldsn() string {
 	dsn := "postgres://" + conf.Username + ":" + conf.Password + "@" + conf.Host + ":" + conf.Port + "/" + conf.Database
-	log.Print(dsn)
 	return dsn
 }
 
 func nullArrayDBValue(value interface{}) interface{} {
 	val := value.([]string)
 	if len(val) > 0 {
-		return "{'" + strings.Join(value.([]string), "'}, {'") + "'}"
+		return "{" + strings.Join(value.([]string), ",") + "}"
 	} else {
 		return "{}"
 	}
@@ -118,9 +116,7 @@ func nullArrayValue(value interface{}) (result reflect.Value) {
 	v := value.(sql.NullString)
 	if v.Valid {
 		val, _ := v.Value()
-		val = strings.TrimPrefix(val, "{'")
-		val = strings.TrimSuffix(val, "'}")
-		r := strings.Split(val, "'}, {'")
+		r := strings.Split(strings.Trim(val.(string), "{}"), ",")
 		if len(r) == 0 {
 			return reflect.ValueOf([]string{})
 		}

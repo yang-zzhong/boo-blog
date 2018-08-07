@@ -39,6 +39,12 @@ func (this *Login) Register(req *httprouter.Request) {
 		this.String("电话或者邮箱或者用户名已被使用", 500)
 		return
 	}
+	if user.EmailAddr != "" {
+		if err := this.SendVerifyEmail(user); err != nil {
+			this.InternalError(err)
+			return
+		}
+	}
 	if err := user.Save(); err != nil {
 		this.InternalError(err)
 	}
@@ -78,4 +84,8 @@ func (this *Login) Login(req *httprouter.Request) {
 
 func (this *Login) Logout(req *httprouter.Request) {
 	session.Del(req.Header.Get("id"))
+}
+
+func (this *Login) SendVerifyEmail(user *model.User) error {
+	return nil
 }
