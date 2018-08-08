@@ -100,6 +100,7 @@ func (blogger *Blogger) CreateTable() error {
 		defer model.CloseDB()
 		repos := []*Repo{
 			model.NewBlog().Repo(),
+			model.NewBlogContent().Repo(),
 			model.NewVote().Repo(),
 			model.NewCate().Repo(),
 			model.NewImage().Repo(),

@@ -1,15 +1,14 @@
 package model
 
 import (
+	"database/sql"
+	"errors"
 	"github.com/google/uuid"
 	model "github.com/yang-zzhong/go-model"
 	. "github.com/yang-zzhong/go-querybuilder"
-	"golang.org/x/net/html"
-	"io/ioutil"
 	"reflect"
 	"regexp"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -21,6 +20,7 @@ type Blog struct {
 	UrlId        string    `db:"url_id varchar(256)"`
 	UserId       uint32    `db:"user_id bigint"`
 	CateId       uint32    `db:"cate_id bigint nil"`
+	ContentId    uint32    `db:"content_id bigint"`
 	Tags         []string  `db:"tags varchar(32)[] nil"`
 	Comments     int       `db:"comments int"`
 	ThumbUp      int       `db:"thumb_up int"`
@@ -54,10 +54,6 @@ func (blog *Blog) Value(colname string, value interface{}) (result reflect.Value
 	return
 }
 
-func (blog *Blog) SaveContent(content string) error {
-	return ioutil.WriteFile(blog.Pathfile(), []byte(content), 0755)
-}
-
 func (blog *Blog) Pathfile() string {
 	id := strconv.FormatUint(uint64(blog.UserId), 32)
 	return conf.BlogDir + id + "-" + blog.Title + ".html"
@@ -69,66 +65,61 @@ func (blog *Blog) WithUrlId() *Blog {
 }
 
 func (blog *Blog) GetUrlId(title string) string {
-	reg, _ := regexp.Compile("\\s|\\?|\\&|\"|'")
+	reg, _ := regexp.Compile("\\s|\\?|\\&|\"|'|\\/")
 	return reg.ReplaceAllString(title, "-")
 }
 
-func (blog *Blog) WithOverview(content string) {
-	reader := strings.NewReader(content)
-	node, _ := html.Parse(reader)
-	nodes := 0
-	find(node, func(d *html.Node) bool {
-		if nodes > 300 {
-			return true
-		}
-		nodes++
-		if d.Type == html.ElementNode && d.Data == "img" {
-			for _, attr := range d.Attr {
-				if attr.Key == "src" {
-					blog.Image = attr.Val
-					return true
-				}
-			}
-		}
-		return false
-	})
+func (blog *Blog) WithOverview() error {
+	var content *BlogContent
+	if m, err := blog.One("content"); err != nil {
+		return err
+	} else if m == nil {
+		return errors.New("no content set")
+	} else {
+		content = m.(*BlogContent)
+	}
+	blog.Image = content.PreviewImageUrl()
 	limit := 256
 	if blog.Image != "" {
 		limit = 128
 	}
-	nodes = 0
-	overview := []rune{}
-	find(node, func(d *html.Node) bool {
-		if nodes > 300 {
-			return true
-		}
-		if d.Type == html.ElementNode && (d.Data == "style" || d.Data == "code" || d.Data == "head") {
-			return false
-		}
-		nodes++
-		if d.Type == html.TextNode {
-			overview = append(overview, []rune(d.Data)...)
-		}
-		if len(overview) > limit {
-			return true
-		}
-		return false
-	})
-	if len(overview) > limit {
-		overview = overview[0:limit]
-	}
-	blog.Overview = string(overview)
+	blog.Overview = content.Preview(limit)
+	return nil
 }
 
 func (blog *Blog) Content() string {
-	content, _ := ioutil.ReadFile(blog.Pathfile())
-	return string(content)
+	if m, err := blog.One("content"); err != nil || m == nil {
+		return ""
+	} else {
+		return m.(*BlogContent).Content
+	}
+}
+
+func (blog *Blog) Save() error {
+	return model.Conn.Tx(func(tx *sql.Tx) error {
+		blog.Repo().WithTx(tx)
+		if err := blog.Base.Save(); err != nil {
+			return nil
+		}
+		if m, err := blog.One("content"); err != nil {
+			return err
+		} else if m == nil {
+			return errors.New("no content set")
+		} else {
+			m.(*BlogContent).Repo().WithTx(tx)
+			m.(*BlogContent).Save()
+		}
+		return nil
+	}, nil, nil)
 }
 
 func NewBlog() *Blog {
 	blog := model.NewModel(new(Blog)).(*Blog)
 	blog.DeclareOne("author", new(User), model.Nexus{
 		"id": "user_id",
+	})
+	blog.DeclareOne("content", new(BlogContent), model.Nexus{
+		"id": "content_id",
 	})
 	blog.DeclareOne("cate", new(Cate), model.Nexus{
 		"id": "cate_id",
@@ -156,20 +147,4 @@ func (blog *Blog) Instance() *Blog {
 	blog.CreatedAt = time.Now()
 	blog.UpdatedAt = time.Now()
 	return blog
-}
-
-type callback func(n *html.Node) bool
-
-func find(n *html.Node, call callback) bool {
-	if call(n) {
-		return true
-	}
-	var w, d bool
-	for c := n.FirstChild; c != nil; c = c.FirstChild {
-		d = find(c, call)
-	}
-	for c := n.NextSibling; c != nil; c = c.NextSibling {
-		w = find(c, call)
-	}
-	return w || d
 }

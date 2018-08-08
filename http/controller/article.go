@@ -147,7 +147,10 @@ func (this *Article) Create(req *httprouter.Request, p *helpers.P) {
 		"allow_thumb":   req.FormBool("allow_thumb"),
 		"allow_comment": req.FormBool("allow_comment"),
 	})
-	blog.WithUrlId().WithOverview(req.FormValue("content"))
+	content := model.NewBlogContent().Instance(req.FormValue("content"))
+	blog.SetOne("content", content)
+	blog.ContentId = content.Id
+	blog.WithUrlId().WithOverview()
 	blog.Repo().Where("user_id", blog.UserId).Quote(func(repo *Builder) {
 		repo.Where("title", blog.Title)
 		repo.Or().Where("url_id", blog.UrlId)
@@ -161,10 +164,6 @@ func (this *Article) Create(req *httprouter.Request, p *helpers.P) {
 	}
 	if len(blog.Tags) == 0 {
 		this.String("至少选择一个标签", 500)
-		return
-	}
-	if err := blog.SaveContent(req.FormValue("content")); err != nil {
-		this.InternalError(err)
 		return
 	}
 	if err := blog.Save(); err != nil {
@@ -197,7 +196,16 @@ func (this *Article) Update(req *httprouter.Request, p *helpers.P) {
 		"allow_thumb":   req.FormBool("allow_thumb"),
 		"allow_comment": req.FormBool("allow_comment"),
 	})
-	blog.WithUrlId().WithOverview(req.FormValue("content"))
+	if m, err := blog.One("content"); err != nil {
+		this.InternalError(err)
+		return
+	} else if m == nil {
+		this.String("系统错误", 500)
+		return
+	} else {
+		m.(*model.BlogContent).Content = req.FormValue("content")
+		blog.WithUrlId().WithOverview()
+	}
 	if err := blog.Save(); err != nil {
 		this.InternalError(err)
 	}
