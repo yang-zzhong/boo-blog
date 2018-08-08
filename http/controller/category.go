@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	helpers "github.com/yang-zzhong/go-helpers"
 	httprouter "github.com/yang-zzhong/go-httprouter"
-	. "github.com/yang-zzhong/go-model"
 	. "github.com/yang-zzhong/go-querybuilder"
 )
 
@@ -16,7 +15,7 @@ func (this *Category) Find(req *httprouter.Request) {
 	if userId := req.FormValue("user_id"); userId != "" {
 		cate.Repo().Where("user_id", userId)
 	}
-	this.renderCates(cate.Repo(), make(map[uint32]int))
+	this.renderCates(cate, make(map[uint32]int))
 }
 
 func (this *Category) Create(req *httprouter.Request, p *helpers.P) {
@@ -67,7 +66,7 @@ func (this *Category) ImageUsed(req *httprouter.Request, p *helpers.P) {
 	}
 	cate.Repo().WhereIn("id", cateIds)
 
-	this.renderCates(cate.Repo(), idCount)
+	this.renderCates(cate, idCount)
 }
 
 func (this *Category) ArticleUsed(req *httprouter.Request, p *helpers.P) {
@@ -95,9 +94,9 @@ func (this *Category) ArticleUsed(req *httprouter.Request, p *helpers.P) {
 		return
 	}
 	cate := model.NewCate()
-	cate.Repo().WhereIn("id", cateIds)
+	cate.Repo().WhereIn("id", cateIds).Where("user_id", p.Get("user_id"))
 
-	this.renderCates(cate.Repo(), idCount)
+	this.renderCates(cate, idCount)
 }
 
 func (this *Category) Update(req *httprouter.Request, p *helpers.P) {
@@ -152,8 +151,7 @@ func (this *Category) Delete(req *httprouter.Request, p *helpers.P) {
 	}
 }
 
-func (this *Category) renderCates(repo *Repo, idQuantity map[uint32]int) {
-	cate := model.NewCate()
+func (this *Category) renderCates(cate *model.Cate, idQuantity map[uint32]int) {
 	if data, err := cate.Repo().Fetch(); err != nil {
 		this.InternalError(err)
 	} else {
