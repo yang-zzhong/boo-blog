@@ -42,6 +42,11 @@ func registerUserAuthRoutes(router *httprouter.Router) {
 }
 
 func registerBlogAuthRoutes(router *httprouter.Router) {
+	router.Get("/blogs/about-me/:type", func(w ResponseWriter, req *httprouter.Request, p *P) {
+		blog := &controller.Article{controller.NewController(w)}
+		blog.AboutMe(req, p)
+	})
+
 	router.Post("/blogs/:blog_id/thumb-up", func(w ResponseWriter, _ *httprouter.Request, p *P) {
 		vote := &controller.Vote{controller.NewController(w)}
 		p.Set("vote", 1)

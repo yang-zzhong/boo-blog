@@ -28,73 +28,17 @@ func (this *Article) Find(req *httprouter.Request, p *helpers.P) {
 				Or().Where("overview", LIKE, "%"+keyword+"%")
 		})
 	}
-	if p := req.FormInt("page"); p != 0 {
-		ps := req.FormInt("page_size")
-		if ps == 0 {
-			ps = 10
-		}
-		blog.Repo().Page(int(p), int(ps))
+	page := req.FormInt("page")
+	if page == 0 {
+		page = 1
 	}
+	blog.Repo().Page(int(page), 10)
 	blog.Repo().OrderBy("thumb_up", DESC).
 		OrderBy("created_at", DESC).
 		OrderBy("thumb_down", ASC).
 		OrderBy("comments", DESC)
-	if p.Get("visitor_id") != nil {
-		blog.Repo().WithCustom("thumb_up", func(mo interface{}) (m.NexusValues, error) {
-			return thumbedCallback(mo, p.Get("visitor_id"))
-		})
-		blog.Repo().WithCustom("thumb_down", func(mo interface{}) (m.NexusValues, error) {
-			return thumbedCallback(mo, p.Get("visitor_id"))
-		})
-	}
-	if req.FormValue("with-author") == "1" {
-		blog.Repo().With("author")
-	}
-	if items, err := blog.Repo().Fetch(); err != nil {
-		this.InternalError(err)
-		return
-	} else {
-		result := []map[string]interface{}{}
-		for _, i := range items {
-			item := i.(*model.Blog).Map()
-			if p.Get("visitor_id") != nil {
-				if thumbedUp, err := i.(*model.Blog).Many("thumb_up"); err != nil {
-					this.InternalError(err)
-					return
-				} else {
-					item["thumbed_up"] = thumbedUp
-				}
-				if thumbedDown, err := i.(*model.Blog).Many("thumb_down"); err != nil {
-					this.InternalError(err)
-					return
-				} else {
-					item["thumbed_down"] = thumbedDown
-				}
-			} else {
-				item["thumbed_up"] = false
-				item["thumbed_down"] = false
-			}
-			if req.FormValue("with-author") != "1" {
-				result = append(result, item)
-				continue
-			}
-			if author, err := i.(*model.Blog).One("author"); err != nil {
-				this.InternalError(err)
-				return
-			} else if author == nil {
-				this.String("系统错误", 500)
-				return
-			} else {
-				item["author"] = map[string]interface{}{
-					"id":                author.(*model.User).Id,
-					"name":              author.(*model.User).Name,
-					"portrait_image_id": author.(*model.User).PortraitImageId,
-				}
-				result = append(result, item)
-			}
-		}
-		this.Json(result, 200)
-	}
+
+	this.normalList(blog, req, p)
 }
 
 func (this *Article) GetOne(req *httprouter.Request, p *helpers.P) {
@@ -212,6 +156,34 @@ func (this *Article) Update(req *httprouter.Request, p *helpers.P) {
 	this.Json(blog, 200)
 }
 
+func (this *Article) AboutMe(req *httprouter.Request, p *helpers.P) {
+	blog := model.NewBlog()
+	blog.Repo().Quote(func(query *Builder) {
+		t := p.Get("type").(string)
+		blog.Repo().WhereRaw("false")
+		if t == "all" || t == "thumb" {
+			vote := model.NewVote()
+			vote.Repo().Select("target_id").
+				Where("target_type", model.VOTE_BLOG).
+				Where("user_id", p.Get("visitor_id"))
+
+			blog.Repo().Or().WhereInQuery("id", vote.Repo().Builder)
+		}
+		if t == "all" || t == "comment" {
+			comment := model.NewComment()
+			comment.Repo().Select("blog_id").
+				Where("user_id", p.Get("visitor_id"))
+			blog.Repo().Or().WhereInQuery("id", comment.Repo().Builder)
+		}
+	})
+	page := req.FormInt("page")
+	if page == 0 {
+		page = 1
+	}
+	blog.Repo().Page(int(page), 10)
+	this.normalList(blog, req, p)
+}
+
 func (this *Article) Remove(req *httprouter.Request, p *helpers.P) {
 	blog := model.NewBlog()
 	if i, ok, err := blog.Repo().Find(p.Get("id")); err != nil {
@@ -318,4 +290,63 @@ func thumbedCallback(mo interface{}, visitorId interface{}) (val m.NexusValues, 
 		val = &withCustomBlogIn{blogIds}
 	}
 	return
+}
+
+func (this *Article) normalList(blog *model.Blog, req *httprouter.Request, p *helpers.P) {
+	if req.FormValue("with-author") == "1" {
+		blog.Repo().With("author")
+	}
+	if p.Get("visitor_id") != nil {
+		blog.Repo().WithCustom("thumb_up", func(mo interface{}) (m.NexusValues, error) {
+			return thumbedCallback(mo, p.Get("visitor_id"))
+		})
+		blog.Repo().WithCustom("thumb_down", func(mo interface{}) (m.NexusValues, error) {
+			return thumbedCallback(mo, p.Get("visitor_id"))
+		})
+	}
+	if items, err := blog.Repo().Fetch(); err != nil {
+		this.InternalError(err)
+		return
+	} else {
+		result := []map[string]interface{}{}
+		for _, i := range items {
+			item := i.(*model.Blog).Map()
+			if p.Get("visitor_id") != nil {
+				if thumbedUp, err := i.(*model.Blog).Many("thumb_up"); err != nil {
+					this.InternalError(err)
+					return
+				} else {
+					item["thumbed_up"] = thumbedUp
+				}
+				if thumbedDown, err := i.(*model.Blog).Many("thumb_down"); err != nil {
+					this.InternalError(err)
+					return
+				} else {
+					item["thumbed_down"] = thumbedDown
+				}
+			} else {
+				item["thumbed_up"] = false
+				item["thumbed_down"] = false
+			}
+			if req.FormValue("with-author") != "1" {
+				result = append(result, item)
+				continue
+			}
+			if author, err := i.(*model.Blog).One("author"); err != nil {
+				this.InternalError(err)
+				return
+			} else if author == nil {
+				this.String("系统错误", 500)
+				return
+			} else {
+				item["author"] = map[string]interface{}{
+					"id":                author.(*model.User).Id,
+					"name":              author.(*model.User).Name,
+					"portrait_image_id": author.(*model.User).PortraitImageId,
+				}
+				result = append(result, item)
+			}
+		}
+		this.Json(result, 200)
+	}
 }
