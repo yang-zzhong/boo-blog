@@ -91,12 +91,15 @@ func find(n *html.Node, call callback) bool {
 	if call(n) {
 		return true
 	}
-	var w, d bool
+	var found bool
 	for c := n.FirstChild; c != nil; c = c.FirstChild {
-		d = find(c, call)
+		found = find(c, call)
+	}
+	if found {
+		return found
 	}
 	for c := n.NextSibling; c != nil; c = c.NextSibling {
-		w = find(c, call)
+		found = find(c, call)
 	}
-	return w || d
+	return found
 }
