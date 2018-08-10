@@ -110,7 +110,18 @@ func (this *Article) Create(req *httprouter.Request, p *helpers.P) {
 		this.String("至少选择一个标签", 500)
 		return
 	}
-	if err := blog.Save(); err != nil {
+	err := m.Conn.Tx(func(tx *sql.Tx) error {
+		if err := blog.Repo().WithTx(tx).Create(blog); err != nil {
+			return err
+		}
+		visitor := p.Get("visitor").(*model.User)
+		visitor.Blogs += 1
+		if err := blog.Repo().WithTx(tx).Update(visitor); err != nil {
+			return err
+		}
+		return nil
+	}, nil, nil)
+	if err != nil {
 		this.InternalError(err)
 		return
 	}
@@ -199,7 +210,18 @@ func (this *Article) Remove(req *httprouter.Request, p *helpers.P) {
 		this.String("你没有权限修改别人的文章", 500)
 		return
 	}
-	if err := blog.Delete(); err != nil {
+	err := m.Conn.Tx(func(tx *sql.Tx) error {
+		if err := blog.Repo().WithTx(tx).Delete(blog); err != nil {
+			return err
+		}
+		visitor := p.Get("visitor").(*model.User)
+		visitor.Blogs -= 1
+		if err := blog.Repo().WithTx(tx).Update(visitor); err != nil {
+			return err
+		}
+		return nil
+	}, nil, nil)
+	if err != nil {
 		this.InternalError(err)
 	}
 }
@@ -225,9 +247,19 @@ func (this *Article) RemoveMany(req *httprouter.Request, p *helpers.P) {
 				return
 			}
 		}
-		if err := blog.Repo().Delete(bs); err != nil {
+		err := m.Conn.Tx(func(tx *sql.Tx) error {
+			if err := blog.Repo().WithTx(tx).Delete(bs); err != nil {
+				return err
+			}
+			visitor := p.Get("visitor").(*model.User)
+			visitor.Blogs -= len(bs)
+			if err := blog.Repo().WithTx(tx).Update(visitor); err != nil {
+				return err
+			}
+			return nil
+		}, nil, nil)
+		if err != nil {
 			this.InternalError(err)
-			return
 		}
 	}
 }

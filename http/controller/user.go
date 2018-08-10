@@ -36,6 +36,9 @@ func (this *User) AboutMe(req *httprouter.Request, p *helpers.P) {
 		userFollow.Repo().
 			Select("user_id").
 			Where("followed", p.Get("visitor_id"))
+	} else {
+		this.String("错误的类型", 500)
+		return
 	}
 	user.Repo().WhereInQuery("id", userFollow.Repo().Builder)
 	this.profiles(user, req, p, func(_ map[string]interface{}, _ *model.User) {})
@@ -127,6 +130,21 @@ func (this *User) SaveUserInfo(req *httprouter.Request, p *helpers.P) {
 
 func (this *User) profiles(user *model.User, req *httprouter.Request, p *helpers.P, h handleItem) {
 	user.Repo().With("current_theme")
+	user.Repo().WithCustom("blogs", func(b interface{}) (data m.NexusValues, err error) {
+		repo := b.(m.Model).Repo()
+		repo.OrderBy("thumb_up", DESC).OrderBy("thumb_down", ASC)
+		repo.Limit(3)
+		if d, e := repo.Fetch(); e != nil {
+			err = e
+		} else {
+			da := make(map[interface{}]interface{})
+			for i, val := range d {
+				da[i] = val
+			}
+			data = m.NewNexusValues(da)
+		}
+		return
+	})
 	if p.Get("visitor_id") != nil {
 		user.Repo().WithCustom("followed", func(uf interface{}) (nv m.NexusValues, err error) {
 			repo := uf.(m.Model).Repo()
@@ -163,6 +181,22 @@ func (this *User) profiles(user *model.User, req *httprouter.Request, p *helpers
 				}
 			} else {
 				profile["i_followed"] = false
+			}
+			if blogs, err := i.(*model.User).Many("blogs"); err != nil {
+				this.InternalError(err)
+				return
+			} else {
+				bs := []map[string]interface{}{}
+				for _, b := range blogs.(map[interface{}]interface{}) {
+					blog := b.(*model.Blog)
+					bs = append(bs, map[string]interface{}{
+						"url_id":     blog.UrlId,
+						"title":      blog.Title,
+						"overview":   blog.Overview,
+						"created_at": blog.CreatedAt,
+					})
+				}
+				profile["recommands"] = bs
 			}
 			h(profile, i.(*model.User))
 			result = append(result, profile)

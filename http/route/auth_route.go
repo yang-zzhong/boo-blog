@@ -31,6 +31,10 @@ func registerThemeAuthRoutes(router *httprouter.Router) {
 }
 
 func registerUserAuthRoutes(router *httprouter.Router) {
+	router.Get("/users/about-me/:type", func(w ResponseWriter, req *httprouter.Request, p *P) {
+		user := &controller.User{controller.NewController(w)}
+		user.AboutMe(req, p)
+	})
 	router.Post("/following/:user_id", func(w ResponseWriter, _ *httprouter.Request, p *P) {
 		follow := &controller.UserFollow{controller.NewController(w)}
 		follow.Follow(p)
