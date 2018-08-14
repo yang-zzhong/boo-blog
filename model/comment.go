@@ -14,8 +14,8 @@ type Comment struct {
 	Reply          uint32    `db:"reply bigint"`
 	Ats            []string  `db:"ats bigint[] nil"`
 	BlogId         uint32    `db:"blog_id bigint"`
-	CommentId      uint32    `db:"comment_Id bigint nil"`
-	CommentAllowed bool      `db:"comment_allowed int"`
+	CommentId      uint32    `db:"comment_id bigint nil"`
+	CommentAllowed bool      `db:"comment_allowed boolean"`
 	CommentedAt    time.Time `db:"commented_at timestamp"`
 	*model.Base
 }

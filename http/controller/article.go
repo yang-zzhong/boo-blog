@@ -114,9 +114,12 @@ func (this *Article) Create(req *httprouter.Request, p *helpers.P) {
 		if err := blog.Repo().WithTx(tx).Create(blog); err != nil {
 			return err
 		}
+		if err := content.Repo().WithTx(tx).Create(content); err != nil {
+			return err
+		}
 		visitor := p.Get("visitor").(*model.User)
 		visitor.Blogs += 1
-		if err := blog.Repo().WithTx(tx).Update(visitor); err != nil {
+		if err := visitor.Repo().WithTx(tx).Update(visitor); err != nil {
 			return err
 		}
 		return nil
@@ -151,6 +154,7 @@ func (this *Article) Update(req *httprouter.Request, p *helpers.P) {
 		"allow_thumb":   req.FormBool("allow_thumb"),
 		"allow_comment": req.FormBool("allow_comment"),
 	})
+	var content *model.BlogContent
 	if m, err := blog.One("content"); err != nil {
 		this.InternalError(err)
 		return
@@ -158,9 +162,19 @@ func (this *Article) Update(req *httprouter.Request, p *helpers.P) {
 		this.String("系统错误", 500)
 		return
 	} else {
-		m.(*model.BlogContent).Content = req.FormValue("content")
+		content = m.(*model.BlogContent)
+		content.Content = req.FormValue("content")
 		blog.WithUrlId().WithOverview()
 	}
+	m.Conn.Tx(func(tx *sql.Tx) error {
+		if err := blog.Repo().WithTx(tx).Update(blog); err != nil {
+			return err
+		}
+		if err := content.Repo().WithTx(tx).Update(content); err != nil {
+			return err
+		}
+		return nil
+	}, nil, nil)
 	if err := blog.Save(); err != nil {
 		this.InternalError(err)
 	}
@@ -241,19 +255,33 @@ func (this *Article) RemoveMany(req *httprouter.Request, p *helpers.P) {
 		this.InternalError(err)
 		return
 	} else {
+		content := model.NewBlogContent()
+		cs := []interface{}{}
 		for _, m := range bs {
 			if m.(*model.Blog).UserId != p.Get("visitor_id") {
 				this.String("你没有权限删除别人的文章", 500)
 				return
 			}
+			cs = append(cs, m.(*model.Blog).ContentId)
+		}
+		content.Repo().WhereIn("id", cs)
+		var contents interface{}
+		if cos, err := content.Repo().Fetch(); err != nil {
+			this.InternalError(err)
+			return
+		} else {
+			contents = cos
 		}
 		err := m.Conn.Tx(func(tx *sql.Tx) error {
 			if err := blog.Repo().WithTx(tx).Delete(bs); err != nil {
 				return err
 			}
+			if err := content.Repo().WithTx(tx).Delete(contents); err != nil {
+				return err
+			}
 			visitor := p.Get("visitor").(*model.User)
 			visitor.Blogs -= len(bs)
-			if err := blog.Repo().WithTx(tx).Update(visitor); err != nil {
+			if err := visitor.Repo().WithTx(tx).Update(visitor); err != nil {
 				return err
 			}
 			return nil
