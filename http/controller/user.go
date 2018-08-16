@@ -20,7 +20,11 @@ func (this *User) Find(req *httprouter.Request, p *helpers.P) {
 				Or().Where("email_addr", LIKE, "%"+keyword+"%")
 		})
 	}
-	user.Repo().Limit(10)
+	page := req.FormInt("page")
+	if page == 0 {
+		page = 1
+	}
+	user.Repo().Page(int(page), 10)
 	user.Repo().OrderBy("created_at", ASC)
 	this.profiles(user, req, p, func(_ map[string]interface{}, _ *model.User) {})
 }
@@ -41,6 +45,11 @@ func (this *User) AboutMe(req *httprouter.Request, p *helpers.P) {
 		return
 	}
 	user.Repo().WhereInQuery("id", userFollow.Repo().Builder)
+	page := req.FormInt("page")
+	if page == 0 {
+		page = 1
+	}
+	user.Repo().Page(int(page), 10)
 	this.profiles(user, req, p, func(_ map[string]interface{}, _ *model.User) {})
 }
 
