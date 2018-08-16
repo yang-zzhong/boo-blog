@@ -24,8 +24,12 @@ func (this *Article) Find(req *httprouter.Request, p *helpers.P) {
 	}
 	if keyword := req.FormValue("keyword"); keyword != "" {
 		blog.Repo().Quote(func(repo *Builder) {
+			r := model.NewBlogContent().Repo()
+			r.Where("content", LIKE, "%"+keyword+"%").Select("id")
+
 			repo.Where("title", LIKE, "%"+keyword+"%").
-				Or().Where("overview", LIKE, "%"+keyword+"%")
+				Or().Where("overview", LIKE, "%"+keyword+"%").
+				Or().WhereInQuery("content_id", r.Builder)
 		})
 	}
 	page := req.FormInt("page")
