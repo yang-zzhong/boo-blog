@@ -29,7 +29,7 @@ func Router(docRoot string) *httprouter.Router {
 		registerPublicRoute(router)
 		router.Group("", []httprouter.Middleware{
 			&middleware.MustAuthUser,
-			&middleware.MustContactAuthedUser,
+			// &middleware.MustContactAuthedUser,
 		}, registerNeedAuthRoute)
 	})
 	return router

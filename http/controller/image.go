@@ -40,8 +40,9 @@ func (this *Image) Find(req *httprouter.Request) {
 		for _, entity := range userImages {
 			image := entity.(*model.UserImage)
 			result = append(result, map[string]interface{}{
-				"image_id": image.Hash,
-				"user_id":  image.UserId,
+				"image_id":      image.Hash,
+				"user_image_id": image.Id,
+				"user_id":       image.UserId,
 			})
 		}
 		this.Json(result, 200)
