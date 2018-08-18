@@ -125,8 +125,8 @@ func (this *Image) Get(req *httprouter.Request, p *helpers.P) {
 		this.InternalError(err)
 		return
 	}
-	this.ResponseWriter().Header().Set("Content-Type", image.MimeType())
-	this.ResponseWriter().WriteHeader(StatusOK)
+	this.ResponseWriter().WithHeader("Content-Type", image.MimeType())
+	this.ResponseWriter().WithStatusCode(StatusOK)
 	return
 }
 

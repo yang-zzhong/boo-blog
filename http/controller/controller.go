@@ -1,38 +1,33 @@
 package controller
 
 import (
-	"encoding/json"
-	"io"
+	httprouter "github.com/yang-zzhong/go-httprouter"
 	"log"
-	"net/http"
 )
 
 type Controller struct {
-	responseWriter interface{}
+	w *httprouter.ResponseWriter
 }
 
-func NewController(responseWriter interface{}) *Controller {
+func NewController(responseWriter *httprouter.ResponseWriter) *Controller {
 	controller := new(Controller)
-	controller.responseWriter = responseWriter
+	controller.w = responseWriter
 	return controller
 }
 
-func (controller *Controller) ResponseWriter() http.ResponseWriter {
-	return controller.responseWriter.(http.ResponseWriter)
+func (controller *Controller) ResponseWriter() *httprouter.ResponseWriter {
+	return controller.w
 }
 
 func (controller *Controller) String(msg string, statusCode int) {
-	controller.ResponseWriter().WriteHeader(statusCode)
-	io.WriteString(controller.ResponseWriter(), msg)
+	controller.w.WithStatusCode(statusCode).String(msg)
 }
 
 func (controller *Controller) Json(obj interface{}, statusCode int) {
-	encoder := json.NewEncoder(controller.ResponseWriter())
-	encoder.Encode(obj)
-	controller.ResponseWriter().Header().Set("Content-Type", "application/json")
+	controller.w.WithStatusCode(statusCode).WithHeader("Content-Type", "application/json").Json(obj)
 }
 
 func (controller *Controller) InternalError(err error) {
 	log.Fatal(err)
-	controller.String(err.Error(), 500)
+	controller.w.InternalError(err)
 }

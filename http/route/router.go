@@ -11,7 +11,7 @@ import (
 func Router(docRoot string) *httprouter.Router {
 	router := httprouter.NewRouter()
 	router.DocRoot = docRoot
-	router.BeforeApi = func(w ResponseWriter, req *httprouter.Request, p *P) bool {
+	router.BeforeApi = func(w *httprouter.ResponseWriter, req *httprouter.Request, p *P) bool {
 		if req.Request.Method == MethodOptions {
 			ad := middleware.AcrossDomain
 			(&ad).Before(w, req, p)
@@ -46,7 +46,7 @@ func registerNeedAuthRoute(router *httprouter.Router) {
 }
 
 func registerPublicRoute(router *httprouter.Router) {
-	router.Get("/hello-world", func(w ResponseWriter, req *httprouter.Request, _ *P) {
+	router.Get("/hello-world", func(w *httprouter.ResponseWriter, req *httprouter.Request, _ *P) {
 		io.WriteString(w, "hello world")
 	})
 	registerQrCodeRoute(router)
