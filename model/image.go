@@ -10,7 +10,6 @@ import (
 	"image/gif"
 	"image/jpeg"
 	"image/png"
-	"io"
 	mp "mime/multipart"
 	"os"
 	"path"
@@ -110,12 +109,12 @@ func (image *Image) MimeType() string {
 	return contentType
 }
 
-func (image *Image) Resize(w io.Writer, width, height uint, interp resize.InterpolationFunction) error {
-	var err error
+func (image *Image) Resize(width, height uint, interp resize.InterpolationFunction) (b []byte, e error) {
 	var rImage goImage.Image
 	f, err := os.Open(image.Pathfile())
 	if err != nil {
-		return err
+		e = err
+		return
 	}
 	defer f.Close()
 	switch image.Format {
@@ -127,18 +126,20 @@ func (image *Image) Resize(w io.Writer, width, height uint, interp resize.Interp
 		rImage, err = jpeg.Decode(f)
 	}
 	if err != nil {
-		return err
+		return
 	}
-	result := resize.Resize(width, height, rImage, interp)
+	img := resize.Resize(width, height, rImage, interp)
+	var buf bytes.Buffer
 	switch image.Format {
 	case IMAGE_PNG:
-		return png.Encode(w, result)
+		png.Encode(&buf, img)
 	case IMAGE_GIF:
-		return gif.Encode(w, result, nil)
+		gif.Encode(&buf, img, nil)
 	default:
-		return jpeg.Encode(w, result, nil)
+		jpeg.Encode(&buf, img, nil)
 	}
-	return nil
+	b = buf.Bytes()
+	return
 }
 
 func NewImage() *Image {

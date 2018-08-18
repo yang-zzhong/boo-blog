@@ -99,7 +99,7 @@ func mysqldsn() string {
 }
 
 func pgsqldsn() string {
-	dsn := "postgres://" + conf.Username + ":" + conf.Password + "@" + conf.Host + ":" + conf.Port + "/" + conf.Database
+	dsn := "postgres://" + conf.Username + ":" + conf.Password + "@" + conf.Host + ":" + conf.Port + "/" + conf.Database + "?sslmode=disable"
 	return dsn
 }
 

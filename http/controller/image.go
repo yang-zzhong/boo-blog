@@ -115,8 +115,7 @@ func (this *Image) Get(req *httprouter.Request, p *helpers.P) {
 	} else {
 		image = m.(*model.Image)
 	}
-	err := image.Resize(
-		this.ResponseWriter(),
+	b, err := image.Resize(
 		(uint)(req.FormUint("w")),
 		(uint)(req.FormUint("h")),
 		resize.NearestNeighbor,
@@ -125,9 +124,12 @@ func (this *Image) Get(req *httprouter.Request, p *helpers.P) {
 		this.InternalError(err)
 		return
 	}
+	if _, err := this.ResponseWriter().Write(b); err != nil {
+		this.InternalError(err)
+		return
+	}
 	this.ResponseWriter().WithHeader("Content-Type", image.MimeType())
 	this.ResponseWriter().WithStatusCode(StatusOK)
-	return
 }
 
 func (image *Image) MoveTo(req *httprouter.Request, p *helpers.P) {
