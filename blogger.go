@@ -48,10 +48,18 @@ func (blogger *Blogger) RestartHttp() error {
 	blogger.initCache()
 	blogger.initHttp()
 	model.OpenDB()
-	if err := http.Start(); err != nil {
+	conf := blogger.config.Section("server")
+	certFile := conf.Key("cert_file").String()
+	keyFile := conf.Key("key_file").String()
+	var err error
+	if certFile == "" || keyFile == "" {
+		err = http.Start()
+	} else {
+		err = http.StartTLS(certFile, keyFile)
+	}
+	if err != nil {
 		return err
 	}
-
 	blogger.serverRunning = true
 	return nil
 }

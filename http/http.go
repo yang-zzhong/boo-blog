@@ -33,3 +33,16 @@ func Start() error {
 
 	return nil
 }
+
+func StartTLS(certFile, keyFile string) error {
+	session.InitStore(Http.SessionSecret)
+	log.Print("listen on :" + Http.Port)
+	Http.running = true
+	if l, err := net.Listen("tcp4", ":"+Http.Port); err != nil {
+		return err
+	} else {
+		log.Fatal(http.ServeTLS(l, route.Router(Http.DocRoot), certFile, keyFile))
+	}
+
+	return nil
+}
