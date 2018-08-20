@@ -16,7 +16,8 @@ type Blog struct {
 	Id           uint32    `db:"id bigint pk"`
 	Title        string    `db:"title varchar(256)"`
 	Overview     string    `db:"overview text"`
-	Image        string    `db:"image varchar(1024)"`
+	ImageHash    string    `db:"image_hash char(32) nil"`
+	Image        string    `db:"image varchar(1024) nil"`
 	UrlId        string    `db:"url_id varchar(256)"`
 	UserId       uint32    `db:"user_id bigint"`
 	CateId       uint32    `db:"cate_id bigint nil"`
@@ -78,10 +79,15 @@ func (blog *Blog) WithOverview() error {
 	} else {
 		content = m.(*BlogContent)
 	}
-	blog.Image = content.PreviewImageUrl()
-	limit := 256
-	if blog.Image != "" {
-		limit = 128
+	blog.ImageHash = content.PreviewImageHash()
+	if blog.ImageHash == "" {
+		blog.Image = content.PreviewImageUrl()
+	} else {
+		blog.Image = ""
+	}
+	limit := 128
+	if blog.Image == "" && blog.ImageHash == "" {
+		limit = 256
 	}
 	blog.Overview = content.Preview(limit)
 	return nil

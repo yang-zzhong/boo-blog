@@ -26,6 +26,30 @@ func NewBlogContent() *BlogContent {
 	return content
 }
 
+func (blog *BlogContent) PreviewImageHash() string {
+	reader := strings.NewReader(blog.Content)
+	node, _ := html.Parse(reader)
+	nodes := 0
+	hash := ""
+	find(node, func(d *html.Node) bool {
+		if nodes > 300 {
+			return true
+		}
+		nodes++
+		if d.Type == html.ElementNode && d.Data == "img" {
+			for _, attr := range d.Attr {
+				if attr.Key == "data-id" {
+					hash = attr.Val
+					return true
+				}
+			}
+		}
+		return false
+	})
+
+	return hash
+}
+
 func (blog *BlogContent) PreviewImageUrl() string {
 	reader := strings.NewReader(blog.Content)
 	node, _ := html.Parse(reader)
