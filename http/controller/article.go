@@ -20,7 +20,7 @@ func (this *Article) Find(req *httprouter.Request, p *helpers.P) {
 		blog.Repo().Where("cate_id", cateId)
 	}
 	if tag := req.FormValue("tag"); tag != "" {
-		blog.Repo().WhereRaw("tags && {" + tag + "}")
+		blog.Repo().WhereRaw("tags && '{" + tag + "}'")
 	}
 	if keyword := req.FormValue("keyword"); keyword != "" {
 		blog.Repo().Quote(func(repo *Builder) {
